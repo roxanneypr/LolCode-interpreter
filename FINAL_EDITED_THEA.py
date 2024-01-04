@@ -391,7 +391,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line):
         counter += 1
         # ======================== CHECK SYNTAX
         if counter == 1:
-            if word[1] == "String Literal" or word[1] == "NUMBR Literal" or word[1] == "NUMBAR Literal" or word[1] == "TROOF Literal" or word[1] == "Variable Identifier":
+            if word[1] == "String Literal" or word[1] == "NUMBR Literal" or word[1] == "NUMBAR Literal" or word[1] == "TROOF Literal" or word[1] == "Identifier":
                 prev = "operand"
         else:
             if counter != len(revline) and (isInfiniteAnd == True or isInfiniteOr == True):
@@ -601,6 +601,22 @@ def print_analyzer(line, line_number):
 
     return toprint
 
+def input_analyzer(line, line_number, untokenized_line):
+    print(line)
+    print(untokenized_line)
+    if len(line) != 2:
+        error_prompt(line_number, "Input expression error.")
+    else:
+        if line[1][1] == "Identifier":
+            try:
+                user_input = input()
+                variables[line[1][0]]['value'] = str(user_input)
+                variables[line[1][0]]['data type'] = 'YARN'
+            except:
+                error_prompt(line_number, "Input expression error.")
+        else:
+            error_prompt(line_number, "Input expression error.")
+
 def remove_comments(line, all_tokens):
     global to_remove
     words_to_remove = []
@@ -695,7 +711,16 @@ def analyze(line, classification, line_number, all_tokens):
             print(f"Error in line {line_number}: Must be variable declaration only.")
             exit(0)
         
-
+# ======================================INPUT================================
+    if re.match(r'^\s*GIMMEH', line):
+        # Check if the syntax is correct
+        input_match = re.match(r'^\s*GIMMEH\s+([a-zA-Z][a-zA-Z0-9_]*)\s*(?:BTW .*)?$', line)
+        if input_match:
+            input_analyzer(all_tokens, line_number, line)
+        else:
+            print(f"Error in line {line_number}: Incorrect format for input.")
+            exit(0)
+            
 # ======================================CONCATENATION======================================
     #check for concatenation
     if re.match(r'^\s*SMOOSH', line):
