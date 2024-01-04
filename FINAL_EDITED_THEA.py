@@ -544,7 +544,7 @@ def print_analyzer(line, line_number):
     
 
     operand = []
-    print(line)
+    #print(line)
     counter = 0
     for word in line:
         counter += 1
@@ -552,15 +552,15 @@ def print_analyzer(line, line_number):
         if word[0] == "VISIBLE" and isStart == True:  # Correct the condition here
             isStart = False
         elif word[1] == "Printing Delimiter" or counter == len(line):
-            print(f"OPERANDDDD")
+            #print(f"OPERANDDDD")
             if counter == len(line):
                 operand.append(word)
             operands.append(operand.copy())  # Use copy to avoid modifying the original list
             operand = []
         else:
-            print("HERE")
+           # print("HERE")
             operand.append(word)
-    print(f"OPERANDS: {operands}")
+    #print(f"OPERANDS: {operands}")
 
     for operand in operands:
         if len(operand) == 1:
