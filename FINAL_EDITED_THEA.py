@@ -504,24 +504,16 @@ def arithmetic_analyzer(line, line_number, untokenized_line):
         return stack[0]
 
 def print_analyzer(line, line_number):
-    
-    global inside_wazzup_buhbye, wazzup_line, if_keyword, else_keyword, case_keyword, default_case_keyword
+
+    isStart = True
+    hasOperand = True
+    global inside_wazzup_buhbye, wazzup_line
     toprint = ""
 
     if if_keyword == True and if_delimiter == False:
-        if_keyword = False
         return
 
     if else_keyword == True and if_delimiter == False:
-        else_keyword = False
-        return
-    
-    if case_keyword == True and switch_delimiter == False:
-        case_keyword = False
-        return
-
-    if default_case_keyword == True and switch_delimiter == False:
-        default_case_keyword = False
         return
     
     # this is to ensure that the wazzup and buhbye block only contains variable declaration 
@@ -547,15 +539,82 @@ def print_analyzer(line, line_number):
             print(f"Error in line {line_number}: Must be variable declaration only.")
             # pass
             exit(0)
+
+    operands = []
     
+
+    operand = []
+    print(line)
+    counter = 0
     for word in line:
-        if word[0] != "VISIBLE":
-            if word[1] == "Variable Identifier":
-                toprint += variables[word[0]]['value']
-            elif word[0] == "+":
-                pass
-            elif word[1] == "String Literal":
+        counter += 1
+        print(f"word: {word}")
+        if word[0] == "VISIBLE" and isStart == True:  # Correct the condition here
+            isStart = False
+        elif word[1] == "Printing Delimiter" or counter == len(line):
+            print(f"OPERANDDDD")
+            if counter == len(line):
+                operand.append(word)
+            operands.append(operand.copy())  # Use copy to avoid modifying the original list
+            operand = []
+        else:
+            print("HERE")
+            operand.append(word)
+    print(f"OPERANDS: {operands}")
+
+    for operand in operands:
+        if len(operand) == 1:
+            if operand[0][1] == "String Literal":
+                toprint += operand[0][0][1:-1]
+            elif operand[0][1] == "NUMBR Literal" or operand[0][1] == "NUMBAR Literal" or operand[0][1] == "TROOF Literal":
+                toprint += operand[0][0]
+            elif operand[0][1] == "Identifier":
+                try:
+                    toprint += str(variables[operand[0][0]]['value'])
+                except:
+                    error_prompt(line_number, f"Variable {operand[0][0]} is not yet declared.")
+            else:
+                error_prompt(line_number, "Print expression error.")
+        else:
+            expression = ""
+            for word in operand:
+                expression += word[0]
+                expression += " "
+            
+            if operand[0][1] == "Arithmetic Operator" or operand[0][1] == "Boolean Operator" or operand[0][1] == "Comparison Operator":
+                new_value = arithmetic_analyzer(operand, line_number, expression[:-1])
+                toprint += str(new_value)
+            else:
+                try:
+                    new_value = analyze(operand, line_number, expression[:-1])
+                    toprint += str(new_value)
+                except
+                error_prompt(line_number, "Print expression error.")
+
+            
+    """ isStart = True
+    for word in line:
+        if word[0] == "VISIBLE" and isStart == True:
+            isStart = False
+        elif word[0] != "VISIBLE":
+            if word[1] == "Identifier" and hasOperand == True:
+                try:
+                    toprint += str(variables[word[0]]['value'])
+                    hasOperand = False
+                except:
+                    error_prompt(line_number, f"Variable {word[0]} is not yet declared.")
+            elif word[1] == "Printing Delimeter" and hasOperand == False:
+                hasOperand = True
+            elif word[1] == "String Literal" and hasOperand == True:
                 toprint += word[0][1:-1]
+                hasOperand = False
+            elif (word[1] == "NUMBR Literal" or word[1] == "NUMBAR Literal" or word[1] == "TROOF Literal") and hasOperand == True:
+                toprint += str(word[0])
+                hasOperand = False
+            else:
+                error_prompt(line_number, "Print expression error.")
+        else:
+            error_prompt(line_number, "Print expression error.") """
     return toprint
 
 def remove_comments(line, all_tokens):
