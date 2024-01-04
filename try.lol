@@ -1,0 +1,15 @@
+HAI           
+WAZZUP
+I HAS A NUM ITZ "HELLO" BTW hslkdnfk sdjfks
+I HAS A str1 ITZ "Jea"
+I HAS A str2 ITZ "Anne"
+I HAS A temp ITZ 2
+BUHBYE
+
+
+BOTH SAEM 3 AN 3
+DIFFRINT 4 AN 5
+VISIBLE temp + " - temp" + SUM OF AN 2 AN 2
+VISIBLE 2 + 3
+VISIBLE SUM OF 2 AN 2
+KTHXBYE
