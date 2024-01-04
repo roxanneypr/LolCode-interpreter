@@ -89,6 +89,7 @@ keywords = {
     , "BUHBYE" : "Variable Keyword"
     , "FOUND YR": "Return Keyword"
     , "I IZ": "Function Call keyword"
+    , "+": "Printing Delimiter"
 }
 
 # Regex for identifier
@@ -504,7 +505,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line):
         return stack[0]
 
 def print_analyzer(line, line_number):
-
+    print(f"LINE: {line}")
     isStart = True
     hasOperand = True
     global inside_wazzup_buhbye, wazzup_line
@@ -546,47 +547,55 @@ def print_analyzer(line, line_number):
     operand = []
     #print(line)
     counter = 0
+    
     for word in line:
+
         counter += 1
-        print(f"word: {word}")
+        #print(f"word: {word}")
         if word[0] == "VISIBLE" and isStart == True:  # Correct the condition here
             isStart = False
         elif word[1] == "Printing Delimiter" or counter == len(line):
+            print(f"word: {word}")
             #print(f"OPERANDDDD")
             if counter == len(line):
                 operand.append(word)
-            operands.append(operand.copy())  # Use copy to avoid modifying the original list
-            operand = []
+                operands.append(operand.copy())  # Use copy to avoid modifying the original list
+                operand.clear()
+            else:
+                operands.append(operand.copy())  # Use copy to avoid modifying the original list
+                operand.clear()
         else:
            # print("HERE")
             operand.append(word)
     #print(f"OPERANDS: {operands}")
 
-    for operand in operands:
-        if len(operand) == 1:
-            if operand[0][1] == "String Literal":
-                toprint += operand[0][0][1:-1]
-            elif operand[0][1] == "NUMBR Literal" or operand[0][1] == "NUMBAR Literal" or operand[0][1] == "TROOF Literal":
-                toprint += operand[0][0]
-            elif operand[0][1] == "Identifier":
+    for op in operands:
+        #print(f"OPERAND: {operand}")
+        if len(op) == 1:
+            if op[0][1] == "String Literal":
+                toprint += op[0][0][1:-1]
+            elif op[0][1] == "NUMBR Literal" or op[0][1] == "NUMBAR Literal" or op[0][1] == "TROOF Literal":
+                toprint += op[0][0]
+            elif op[0][1] == "Identifier":
                 try:
-                    toprint += str(variables[operand[0][0]]['value'])
+                    toprint += str(variables[op[0][0]]['value'])
                 except:
-                    error_prompt(line_number, f"Variable {operand[0][0]} is not yet declared.")
+                    error_prompt(line_number, f"Variable {op[0][0]} is not yet declared.")
             else:
                 error_prompt(line_number, "Print expression error.")
         else:
             expression = ""
-            for word in operand:
+            for word in op:
                 expression += word[0]
                 expression += " "
             
-            if operand[0][1] == "Arithmetic Operator" or operand[0][1] == "Boolean Operator" or operand[0][1] == "Comparison Operator":
-                new_value = arithmetic_analyzer(operand, line_number, expression[:-1])
+            if op[0][1] == "Arithmetic Operator" or op[0][1] == "Boolean Operator" or op[0][1] == "Comparison Operator":
+                #print(f"expression: {expression[:-1]}")
+                new_value = arithmetic_analyzer(op, line_number, expression[:-1])
                 toprint += str(new_value)
             else:
                 try:
-                    new_value = analyze(operand, line_number, expression[:-1])
+                    new_value = analyze(op, line_number, expression[:-1])
                     toprint += str(new_value)
                 except:
                     error_prompt(line_number, "Print expression error.")
