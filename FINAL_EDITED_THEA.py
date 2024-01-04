@@ -505,7 +505,6 @@ def arithmetic_analyzer(line, line_number, untokenized_line):
         return stack[0]
 
 def print_analyzer(line, line_number):
-    print(f"LINE: {line}")
     isStart = True
     hasOperand = True
     global inside_wazzup_buhbye, wazzup_line
@@ -555,7 +554,7 @@ def print_analyzer(line, line_number):
         if word[0] == "VISIBLE" and isStart == True:  # Correct the condition here
             isStart = False
         elif word[1] == "Printing Delimiter" or counter == len(line):
-            print(f"word: {word}")
+            #print(f"word: {word}")
             #print(f"OPERANDDDD")
             if counter == len(line):
                 operand.append(word)
@@ -600,30 +599,6 @@ def print_analyzer(line, line_number):
                 except:
                     error_prompt(line_number, "Print expression error.")
 
-            
-    """ isStart = True
-    for word in line:
-        if word[0] == "VISIBLE" and isStart == True:
-            isStart = False
-        elif word[0] != "VISIBLE":
-            if word[1] == "Identifier" and hasOperand == True:
-                try:
-                    toprint += str(variables[word[0]]['value'])
-                    hasOperand = False
-                except:
-                    error_prompt(line_number, f"Variable {word[0]} is not yet declared.")
-            elif word[1] == "Printing Delimeter" and hasOperand == False:
-                hasOperand = True
-            elif word[1] == "String Literal" and hasOperand == True:
-                toprint += word[0][1:-1]
-                hasOperand = False
-            elif (word[1] == "NUMBR Literal" or word[1] == "NUMBAR Literal" or word[1] == "TROOF Literal") and hasOperand == True:
-                toprint += str(word[0])
-                hasOperand = False
-            else:
-                error_prompt(line_number, "Print expression error.")
-        else:
-            error_prompt(line_number, "Print expression error.") """
     return toprint
 
 def remove_comments(line, all_tokens):
