@@ -588,8 +588,8 @@ def print_analyzer(line, line_number):
                 try:
                     new_value = analyze(operand, line_number, expression[:-1])
                     toprint += str(new_value)
-                except
-                error_prompt(line_number, "Print expression error.")
+                except:
+                    error_prompt(line_number, "Print expression error.")
 
             
     """ isStart = True
