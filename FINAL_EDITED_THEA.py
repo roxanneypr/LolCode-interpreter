@@ -1161,6 +1161,8 @@ def if_else_statement(content, lines):
             b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0])
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
+        elif if_else_condition[inner_condition_index][1][0][1] == 'Function Call keyword':
+            pass
         else:
             if if_else_condition[inner_condition_index][1][0][1] == 'Identifier':
             
