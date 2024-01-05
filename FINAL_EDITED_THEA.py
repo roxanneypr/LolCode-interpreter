@@ -2,7 +2,10 @@
     # Gadil, Jea Anne
     # Leyco, Charlize Althea
     # Resuello, Roxanne Ysabel
-    
+
+import tkinter as tk
+from tkinter import ttk
+from tkinter import filedialog
 import os
 import re
 from collections import OrderedDict
@@ -2113,4 +2116,113 @@ def main():
     # for row in only_tuples:
     #     print("\t\t\t".join(str(value).ljust(width) for value, width in zip(row, col_wid))) 
 
-main()
+def show_content(file_path, self):
+
+        if file_path:
+            with open(file_path, "r") as file:
+                content = file.read()
+                
+        self.code_editor.text_widget.delete("1.0", tk.END)
+        self.code_editor.text_widget.insert(tk.END, content)
+        return
+
+class CodeEditor(tk.Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.grid(row=1, column=0, sticky="nsew")
+        self.label = tk.Label(self, text="Text Editor")
+        self.label.pack()
+
+        self.text_widget = tk.Text(self, wrap="word", undo=True)
+        self.text_widget.pack(fill="both", expand=True)
+
+class LexemeTable(tk.Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.grid(row=1, column=1, sticky="nsew")
+        self.label = tk.Label(self, text="Lexeme Table")
+        self.label.pack()
+
+        self.treeview = ttk.Treeview(self)
+        self.treeview["columns"] = ("Lexeme", "Classification")
+        self.treeview.heading("Lexeme", text="Lexeme")
+        self.treeview.column("Lexeme", anchor="w", width=150)  # Adjusted anchor to "w"
+        self.treeview.heading("Classification", text="Classification")
+        self.treeview.column("Classification", anchor="w", width=200)  # Adjust width as needed
+        self.treeview.pack(fill="both", expand=True)
+
+    def populate(self, lexeme_list):
+        print(lexeme_list)
+        for idx, (lexeme, category) in enumerate(lexeme_list, start=1):
+            self.treeview.insert("", idx, values=(lexeme, category))
+
+
+
+class SymbolTable(tk.Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.grid(row=1, column=2, sticky="nsew")
+        self.label = tk.Label(self, text="Symbol Table")
+        self.label.pack()
+        self.treeview = ttk.Treeview(self)
+        self.treeview["columns"] = ("Identifier", "Value")
+        self.treeview.heading("Identifier", text="Identifier")
+        self.treeview.column("Identifier", anchor="center", width=100)
+        self.treeview.heading("Value", text="Value")
+        self.treeview.column("Value", anchor="center", width=100)
+        self.treeview.pack(fill="both", expand=True)
+
+class Console(tk.Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.grid(row=2, column=0, columnspan=3, sticky="nsew")
+        self.label = tk.Label(self, text="Console")
+        self.label.pack()
+        self.text_widget = tk.Text(self, wrap="word", state="normal")
+        self.text_widget.pack(fill="both", expand=True)
+        self.execute_button = tk.Button(self, text="Execute", command=self.execute_code)
+        self.execute_button.pack()
+
+    def execute_code(self):
+        code = self.text_widget.get("1.0", tk.END)
+        print(f"Executing code:\n{code}")
+
+class Application(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.tokens = []
+        self.title("Code Editor with Lexemes and Symbol Table")
+
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+        self.rowconfigure(0, weight=0)
+        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
+
+        self.select_file_button = tk.Button(self, text="Select File", command=self.load_file)
+        self.select_file_button.grid(row=0, column=0, columnspan=3, sticky="nsew")
+
+        self.code_editor = CodeEditor(self)
+        self.lexeme_table = LexemeTable(self)
+        self.symbol_table = SymbolTable(self)
+        self.console = Console(self)
+
+    def load_file(self):
+        file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.lol"), ("All files", "*.*")])
+        contents = []
+        if file_path:
+            with open(file_path, "r") as file:
+                for lines in file:
+                    contents.append(lines.replace("\n", ""))
+
+        self.code_editor.text_widget.delete("1.0", tk.END)
+        self.code_editor.text_widget.insert(tk.END, "\n".join(contents))
+        self.tokens = tokenize(contents)
+
+        # Update LexemeTable with the new tokens
+        self.lexeme_table.populate(self.tokens)
+
+if __name__ == "__main__":
+    app = Application()
+    app.mainloop()
