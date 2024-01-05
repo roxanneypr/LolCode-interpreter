@@ -874,7 +874,7 @@ def analyze(line, classification, line_number, all_tokens):
         if match:
             variable_name = match.group(1)
             variable_type = match.group(3) if match.group(3) else match.group(2)
-            print(variable_name, variable_type)
+            # print(variable_name, variable_type)
 
             # print("dito ulit", variable_type)
             if variable_name in variables:
@@ -1158,7 +1158,7 @@ def if_else_statement(content, lines):
 
             
         elif if_else_condition[inner_condition_index][1][0][1] == 'Output Keyword':
-            b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines)
+            b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0])
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
         else:
