@@ -135,7 +135,7 @@ float_pattern = r'^[+-]?\d+(\.\d+)?$'
 boolean_pattern = r'^(WIN|FAIL)$'
 yarn_pattern = r'".*"'
 variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( ITZ (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$') 
-typecast_pattern = re.compile(r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)(( A (' + '|'.join(type_literal_syntax[:-1]) + '))| YARN)\s*( BTW .*)?$')
+typecast_pattern = re.compile(r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)( A (' + '|'.join(type_literal_syntax[:-1]) + ')| ' + type_literal_syntax[-1] + ')\s*( BTW .*)?\s*$')
 reassignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)\s*((IS NOW A)\s*(' + '|'.join(type_literal_syntax) + ')|(R MAEK)\s*([a-zA-Z]+[a-zA-Z0-9_]*)\s*(' + '|'.join(type_literal_syntax) + '))\s*(BTW .*)?$')       
 assignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)( R (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$')        
 loop_pattern = re.compile(r"IM IN YR ([a-zA-Z][a-zA-Z0-9_]*) (UPPIN|NERFIN) YR ([a-zA-Z][a-zA-Z0-9_]*) ((TIL|WILE) (.+))?")
@@ -173,6 +173,7 @@ condition_index = []
 loop_lines = []
 loop_tokens = []
 is_loop = False
+is_var_assignment = False
 
 #for function
 function_lines =  []
@@ -497,8 +498,21 @@ def arithmetic_analyzer(line, line_number, untokenized_line):
             return result
     
     #print(stack)
-    if len(stack) > 1:
+    if len(stack) != 1:
         error_prompt(line_number, "Expression error.")
+
+    global is_var_assignment
+
+    if is_var_assignment == False:
+        if stack[0] is not None:
+            if stack[0] == True:
+                variables['IT'] = {'value': "WIN", 'data type': "TROOF"}
+            elif stack[0] == False:
+                variables['IT'] = {'value': "FAIL", 'data type': "TROOF"}
+            else:
+                variables['IT'] = {'value': stack[0], 'data type': datatypes[type(stack[0]).__name__]}
+    else:
+        is_var_assignment = False
     
     if stack[0] == True:
         return "WIN"
@@ -508,6 +522,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line):
         return stack[0]
 
 def print_analyzer(line, line_number):
+    global is_var_assignment
     isStart = True
     hasOperand = True
     global inside_wazzup_buhbye, wazzup_line
@@ -842,6 +857,8 @@ def analyze(line, classification, line_number, all_tokens):
                             variables[variable_name] = {'value': initial_value.strip(), 'data type': 'TROOF'}
                         elif re.match(arithmetic_pattern, initial_value) or re.match(boolean_operation, initial_value) or re.match(comparison_pattern, initial_value):
                                 # print("DETECTED")
+                                global is_var_assignment
+                                is_var_assignment = True
                                 filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
                                 new_value = arithmetic_analyzer(filtered_tokens, line_number, line)
                                 # print("new value", new_value)
@@ -875,89 +892,96 @@ def analyze(line, classification, line_number, all_tokens):
         # thus, the typecasting here is stored in the key 'IT'
         match = typecast_pattern.match(line)
         if match:
-            # print("SHIT")
             variable_name = match.group(1)
-            # print("dito be", variable_name)
-            variable_type = match.group(4)
+            variable_type = match.group(3) if match.group(3) else match.group(2)
+            # print(variable_name, variable_type)
+
             # print("dito ulit", variable_type)
             if variable_name in variables:
                 if 'IT' not in variables:
                     variables['IT'] = {'value': None, 'data type': 'NOOB'} 
-                
-                if variable_type == 'NUMBR':
-                    if variables[variable_name]['data type'] == 'NUMBAR':
-                        variables['IT']['value'] = int(variables[variable_name]['value'])
-                        variables['IT']['data type'] = 'NUMBR'
-                    elif variables[variable_name]['data type'] == 'TROOF':
-                        if variables[variable_name]['value'] == 'WIN':
-                            variables['IT']['value'] = 1
-                            variables['IT']['data type'] = 'NUMBR'
-                        else:
-                            variables['IT']['value'] = 0
-                            variables['IT']['data type'] = 'NUMBR'
-                    elif variables[variable_name]['data type'] == 'YARN':
-                        if variables[variable_name]['value'].isnumeric():
+                else:
+                    if variable_type == 'NUMBR':
+                        if variables[variable_name]['data type'] == 'NUMBAR':
                             variables['IT']['value'] = int(variables[variable_name]['value'])
                             variables['IT']['data type'] = 'NUMBR'
-                        else:
-                            print(f"Error in line {line_number}: Cannot cast non-numeric YARN to NUMBR.")
-                    elif variables[variable_name]['data type'] == 'NOOB':
-                        variables['IT']['value'] = 0
-                        variables['IT']['data type'] = 'NUMBR'
-                    
+                        elif variables[variable_name]['data type'] == 'TROOF':
+                            if variables[variable_name]['value'] == 'WIN':
+                                variables['IT']['value'] = 1
+                                variables['IT']['data type'] = 'NUMBR'
+                            else:
+                                variables['IT']['value'] = 0
+                                variables['IT']['data type'] = 'NUMBR'
+                        elif variables[variable_name]['data type'] == 'YARN':
+                            var_value = variables[variable_name]['value']
+                            var_strip = var_value.strip('\"')
+                            # print("STOPPPP",variables[variable_name]['value'].isnumeric())
+                            if var_strip.isnumeric():
+                                variables['IT']['value'] = int(var_strip)
+                                variables['IT']['data type'] = 'NUMBR'
+                            else:
+                                print(f"Error in line {line_number}: Cannot cast non-numeric YARN to NUMBR.")
+                        elif variables[variable_name]['data type'] == 'NOOB':
+                            variables['IT']['value'] = 0
+                            variables['IT']['data type'] = 'NUMBR'
+                        
 
-                elif variable_type == 'NUMBAR':
-                    if variables[variable_name]['data type'] == 'NUMBR':
-                        variables['IT']['value'] = float(variables[variable_name]['value'])
-                        variables['IT']['data type'] = 'NUMBAR'
-                    elif variables[variable_name]['data type'] == 'TROOF':
-                        if variables[variable_name]['value'] == 'WIN':
-                            variables['IT']['value'] = 1.0
-                            variables['IT']['data type'] = 'NUMBAR'
-                        else:
-                            variables['IT']['value'] = float(0)
-                            variables['IT']['data type'] = 'NUMBAR'
-                    elif variables[variable_name]['data type'] == 'YARN':
-                        if variables[variable_name]['value'].isnumeric():
+                    elif variable_type == 'NUMBAR':
+                        if variables[variable_name]['data type'] == 'NUMBR':
                             variables['IT']['value'] = float(variables[variable_name]['value'])
                             variables['IT']['data type'] = 'NUMBAR'
-                        else:
-                            print(f"Error in line {line_number}: Cannot cast non-numeric YARN to NUMBAR.")
-                            exit(0)
-                    elif variables[variable_name]['data type'] == 'NOOB':
-                        variables['IT']['value'] = float(0)
-                        variables['IT']['data type'] = 'NUMBAR'
+                        elif variables[variable_name]['data type'] == 'TROOF':
+                            if variables[variable_name]['value'] == 'WIN':
+                                variables['IT']['value'] = 1.0
+                                variables['IT']['data type'] = 'NUMBAR'
+                            else:
+                                variables['IT']['value'] = float(0)
+                                variables['IT']['data type'] = 'NUMBAR'
+                        elif variables[variable_name]['data type'] == 'YARN':
+                            var_value = variables[variable_name]['value']
+                            var_strip = var_value.strip('\"')
+                            # print("STOPPPP",variables[variable_name]['value'].isnumeric())
+                            if var_strip.isnumeric():
+                                variables['IT']['value'] = int(var_strip)
+                                variables['IT']['data type'] = 'NUMBAR'
+                            else:
+                                print(f"Error in line {line_number}: Cannot cast non-numeric YARN to NUMBAR.")
+                                exit(0)
+                        elif variables[variable_name]['data type'] == 'NOOB':
+                            variables['IT']['value'] = float(0)
+                            variables['IT']['data type'] = 'NUMBAR'
 
-                elif variable_type == 'YARN':
-                    if variables[variable_name]['data type'] == 'NUMBAR':
-                        formatted_value = "{:.2f}".format(variables[variable_name]['value'])
-                        variables['IT']['value'] = formatted_value
-                        variables['IT']['data type'] = 'YARN'
-                    elif variables[variable_name]['data type'] == 'NUMBR':
-                        variables['IT']['value'] = str(variables[variable_name]['value'])
-                        variables['IT']['data type'] = 'YARN'
-                    elif variables[variable_name]['data type'] == 'NOOB':
-                        variables['IT']['value'] = ""
-                        variables['IT']['data type'] = 'YARN'
-                
-                elif variable_type == 'TROOF':
-                    if variables[variable_name]['data type'] == 'NOOB' or variables[variable_name]['value'] == None or variables[variable_name]['value'] == 0 or variables[variable_name]['value'] == float(0) or variables[variable_name]['value'] == "":
-                        variables['IT']['value'] = 'FAIL'
-                        variables['IT']['data type'] = 'TROOF'
-                    else:
-                        variables['IT']['value'] = 'WIN'
-                        variables['IT']['data type'] = 'TROOF'
+                    elif variable_type == 'YARN':
+                        if variables[variable_name]['data type'] == 'NUMBAR':
+                            formatted_value = "{:.2f}".format(variables[variable_name]['value'])
+                            variables['IT']['value'] = formatted_value
+                            variables['IT']['data type'] = 'YARN'
+                        elif variables[variable_name]['data type'] == 'NUMBR':
+                            variables['IT']['value'] = str(variables[variable_name]['value'])
+                            variables['IT']['data type'] = 'YARN'
+                        elif variables[variable_name]['data type'] == 'NOOB':
+                            variables['IT']['value'] = ""
+                            variables['IT']['data type'] = 'YARN'
                     
-                else:
-                    print(f"Error in line {line_number}: Typecast error.")
-                    exit(0)
+                    elif variable_type == 'TROOF':
+                        if variables[variable_name]['data type'] == 'NOOB' or variables[variable_name]['value'] == None or variables[variable_name]['value'] == 0 or variables[variable_name]['value'] == float(0) or variables[variable_name]['value'] == "":
+                            variables['IT']['value'] = 'FAIL'
+                            variables['IT']['data type'] = 'TROOF'
+                        else:
+                            variables['IT']['value'] = 'WIN'
+                            variables['IT']['data type'] = 'TROOF'
+                        
+                    else:
+                        print(variable_type)
+                        print(f"Error in line {line_number}: Typecast error.")
+                        exit(0)
 
             else:
                 print(f"Error in line {line_number}: Variable does not exist.")
                 exit(0)
                 
         else:
-            print(f"Error in line {line_number}: Typecast error.")
+            print(f"Error in line {line_number}: ssTypecast error.")
             exit(0)
     
     elif classification == "Reassignment Operator":
@@ -1075,6 +1099,7 @@ def analyze(line, classification, line_number, all_tokens):
                     else:
                         if re.match(arithmetic_pattern, variable_val) or re.match(boolean_operation, variable_val) or re.match(comparison_pattern, variable_val):
                             #remove tokens using expression
+                            is_var_assignment = True
                             filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
                             new_value = arithmetic_analyzer(filtered_tokens, line_number, line)
                             
@@ -1147,12 +1172,14 @@ def if_else_statement(content, lines):
         
         # print("removed comment", if_else_condition_newformat[condition_index][1:])
         
-        if if_else_condition[inner_condition_index][1][0][1] == 'Arithmetic Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Boolean Operator':
+        if if_else_condition[inner_condition_index][1][0][1] == 'Arithmetic Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Boolean Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Comparison Operator':
             b = arithmetic_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines)
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
+
+            
         elif if_else_condition[inner_condition_index][1][0][1] == 'Output Keyword':
-            b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines)
+            b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0])
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
         else:
@@ -2002,12 +2029,6 @@ def tokenize(content):
                         
                         
                         b = arithmetic_analyzer(removed_tuple, tokens[0], lines)
-                        if removed_tuple[0][1] == "Arithmetic Operator" or removed_tuple[0][1] == "Boolean Operator" or removed_tuple[0][1] == "Comparison Operator":
-                            if b is not None:
-                                if b == "WIN" or b == "FAIL":
-                                    variables['IT'] = {'value': b, 'data type': "TROOF"}
-                                else:
-                                    variables['IT'] = {'value': b, 'data type': datatypes[type(b).__name__]}
                         #print("ETOOOOOOOOOOOOOO")
                         #print("removed_tuple", removed_tuple)
                         #print("tokens[0]", tokens[0])
