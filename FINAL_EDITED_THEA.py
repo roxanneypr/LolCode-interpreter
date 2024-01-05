@@ -498,6 +498,8 @@ def arithmetic_analyzer(line, line_number, untokenized_line):
     if len(stack) != 1:
         error_prompt(line_number, "Expression error.")
 
+    global is_var_assignment
+
     if is_var_assignment == False:
         if stack[0] is not None:
             if stack[0] == True:
@@ -517,6 +519,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line):
         return stack[0]
 
 def print_analyzer(line, line_number):
+    global is_var_assignment
     isStart = True
     hasOperand = True
     global inside_wazzup_buhbye, wazzup_line
@@ -851,6 +854,8 @@ def analyze(line, classification, line_number, all_tokens):
                             variables[variable_name] = {'value': initial_value.strip(), 'data type': 'TROOF'}
                         elif re.match(arithmetic_pattern, initial_value) or re.match(boolean_operation, initial_value) or re.match(comparison_pattern, initial_value):
                                 # print("DETECTED")
+                                global is_var_assignment
+                                is_var_assignment = True
                                 filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
                                 new_value = arithmetic_analyzer(filtered_tokens, line_number, line)
                                 # print("new value", new_value)
@@ -1091,6 +1096,7 @@ def analyze(line, classification, line_number, all_tokens):
                     else:
                         if re.match(arithmetic_pattern, variable_val) or re.match(boolean_operation, variable_val) or re.match(comparison_pattern, variable_val):
                             #remove tokens using expression
+                            is_var_assignment = True
                             filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
                             new_value = arithmetic_analyzer(filtered_tokens, line_number, line)
                             
