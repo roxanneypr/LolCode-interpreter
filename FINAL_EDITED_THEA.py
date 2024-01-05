@@ -666,6 +666,23 @@ def check_comment_errors(line, line_number):
 
 expression = {"Variable Declaration", "Variable Assignment", "Identifier"}
 
+def get_data_type(variable_to_analyze):
+    data_type = ""
+    if re.match(r'\d+\.\d+', variable_to_analyze): 
+        data_type = "NUMBAR"
+    elif variable_to_analyze.isdigit():  
+        data_type = "NUMBR"
+    elif variable_to_analyze in ('WIN', 'FAIL'):  
+        data_type = "TROOF"
+    elif variable_to_analyze.startswith('"') and variable_to_analyze.endswith('"'): 
+        data_type = "YARN"
+    elif variable_to_analyze == "None":
+        data_type = "NOOB"
+    else:
+        data_type = "ELSE"
+        
+    return data_type
+
 #This function checks the syntax 
 def analyze(line, classification, line_number, all_tokens):
 
@@ -736,23 +753,17 @@ def analyze(line, classification, line_number, all_tokens):
             to_concat = []
 
             for token in tokens:
-                if re.match(r'\d+\.\d+', token): 
-                    to_concat.append(token)
-                elif token.isdigit():  # Check for number
-                    to_concat.append(token)
-                elif token in ('WIN', 'FAIL'):  # Check for boolean
-                    to_concat.append(token)
-                elif token.startswith('"') and token.endswith('"'):
+                token_data_type = get_data_type(token)
+                
+                if token_data_type in ("NUMBAR", "NUMBR", "TROOF", "YARN"): 
                     to_concat.append(token)
                 else: 
                 #check if the variables are declared
-                    # print(variables)
-                    # print("\n", functions)
                     if token in variables:
                         var_value = str(variables[token]['value'])
                         to_concat.append(var_value)
                     else:
-                        print(f"Error in line {line_number}: Variable '{token}' is not yet declaredddddddddddd.")
+                        print(f"Error in line {line_number}: Variable '{token}' is not yet declared.")
                         correct_values = False
                         exit(0)
 
@@ -785,6 +796,7 @@ def analyze(line, classification, line_number, all_tokens):
                                     
             if correct_values == True:
                 concatenated = ''.join([str(s).strip('"') for s in to_concat])
+                concatenated = "\"" + concatenated + "\""
                 print("Resulting string after concatenationnnnnn:", concatenated)
                 if 'IT' not in variables:
                     variables['IT'] = {'value': concatenated, 'data type': 'YARN'}
@@ -1179,7 +1191,7 @@ def loop_analyzer():
             
             #check if variable is declared 
             if loop_variable in variables:
-                #check if variable is of type NUMBR
+                #check if variable is osf type NUMBR
                 if variables[loop_variable]['data type'] == "NUMBR":
                     #no errors, perform the loop operation 
                     loop_tokens_code = loop_tokens[1:-1]
@@ -1350,14 +1362,7 @@ def var_in_param(code_block_tuple, function_parameters):
 #This functions calls and evaluates the function given that there are no errors   
 def function_analyzer(line, tokens):
     global variables, is_loop
-    # print("FUNCTIOINSSSSSSSSSSSSSSSSSS",functions)    
-    #copy variables to temporary variables
     temp_variables = variables.copy()
-
-    # function_call_pattern = re.compile(r'I IZ ([a-zA-Z]\w*)(?: YR ((?:\w+|"[^"]+"|\d+\.\d+|\d+|WIN|FAIL)(?: AN YR (?:\w+|"[^"]+"|\d+\.\d+|\d+|WIN|FAIL)(?: AN YR (?:\w+|"[^"]+"|\d+\.\d+|\d+|WIN|FAIL))?)?)?)? MKAY$')
-    # # function_call_pattern = re.compile(r'I IZ (\w+)(?: YR (\S+)(?: AN YR (\S+)(?: AN YR (\S+))?)?)? MKAY')
-    # function_call_match = function_call_pattern.match(line)
-    
     parameter_number = 0
     param_expressions = []
     
@@ -1370,6 +1375,7 @@ def function_analyzer(line, tokens):
     literal_pattern + '|' +
     variable_pattern_forfunc
     )
+    
     function_call_pattern = re.compile(
         r'I IZ ([a-zA-Z_][a-zA-Z_0-9]*)(?: YR ((?:' + combined_pattern_str + '))?(?: AN YR ((?:' + combined_pattern_str + '))?(?: AN YR ((?:' + combined_pattern_str + ')))?)?)? MKAY'
     )
@@ -1382,85 +1388,44 @@ def function_analyzer(line, tokens):
     if function_call_match:
         #extract from match
         function_name = function_call_match.group(1)
-        # expressions = function_call_match.group(2).split(' AN YR ') if function_call_match.group(2) else []
 
-        print("Nice")
-        print(len(tokens))
-        print("check",tokens)
-        for i in range(len(tokens)):
-            print(i, tokens[i])
+        #get parameters from line            
         # no parameters
-        if len(tokens)-1 > 3:
-            print("THIS")
-            
+        if len(tokens)-1 > 3:            
             for i in range(1, len(tokens)):
                 if tokens[i][0] == 'YR':
-
                     parameter_number += 1
-                    # for i in range(i+1, len(tokens))
-                    #     if tokens[i][0] == 'AN':
-                    #         if tokens[i][0] == 'YR':
-                    #             pass
-
-                    #     else:
-
                 if tokens[i][0] == 'AN':
                     if tokens[i][0] == 'YR':
                         parameter_number += 1
-
-            print("no. of param", parameter_number)
             next = 0
             temp = []    
             for i in range(parameter_number):
-                print("\n\n\niter no", i)
                 if i == 0: 
-                    print("yr")  # print("h", tokens[1][0])
                     for j in range(4, len(tokens)):
-                        # print(tokens[j][0])
                         if (tokens[j][0] == 'AN' and tokens[j+1][0] == 'YR') or (tokens[j][0] == 'MKAY'):
-                            print(j)
                             next = j+2
-                            print("here na")
                             param_expressions.append(' '.join(temp))
                             temp = []
-                            print(param_expressions)
                             break
-                                
-                                # pass
-                            # else:
-                            #     temp.append(tokens[j][0])
                         else:
                             temp.append(tokens[j][0])
                 else:
-                    print("nextttt", next)
-                    # print("""""""""""""""""thea""""""""""""""""")
                     for k in range(next, len(tokens)):
-                        # print(k)
                         if (tokens[k][0] == 'AN' and tokens[k+1][0] == 'YR') or (tokens[k][0] == 'MKAY'):
                             next = k+2
-                            print("here na")
                             param_expressions.append(' '.join(temp))
                             temp = []
-                            print(param_expressions)
                             break
-                                
-                                # pass
-                            # else:
-                            #     temp.append(tokens[j][0])
-
                         else:
                             temp.append(tokens[k][0])
-                    
-            print("yoooo", param_expressions)
-            
         
         function_parameters = {}
         
         #check if function exists
         if function_name in functions:
-            
+            #access the function from the global function dictionary
             access_function = functions[function_name]
-        
             access_function_params = access_function[0]
             param_counter = 0
             
@@ -1468,55 +1433,67 @@ def function_analyzer(line, tokens):
             if len(param_expressions) == len(access_function[0]):
                 #add parameters to a list
                 for expression in param_expressions:
+                    
                     parameter_name = access_function_params[param_counter]
-                    # print("parameter name", parameter_name)
-                    if re.match(r'\d+\.\d+', expression): 
-                        function_parameters[parameter_name] = {"value": float(expression), "data type": "NUMBAR"}
-                    elif expression.isdigit():  # Check for number
-                        function_parameters[parameter_name] = {"value": int(expression), "data type": "NUMBR"}
-                    elif expression in ('WIN', 'FAIL'):  # Check for boolean
-                        function_parameters[parameter_name] = {"value": expression, "data type": "TROOF"}
-                    elif expression.startswith('"') and expression.endswith('"'): 
-                        function_parameters[parameter_name] = {"value": expression, "data type": "YARN"}
+                    data_type = get_data_type(expression)
+                    
+                    #add to dictionary if float, int, boolean, or string
+                    if data_type in ("NUMBAR", "NUMBR", "TROOF", "YARN"):
+                        if data_type == "NUMBAR": 
+                            float(expression) 
+                        elif data_type == "NUMBR": 
+                            int(expression) 
+                            
+                        #add to dictionary
+                        function_parameters[parameter_name] = {"value": expression, "data type": data_type}
                     else: 
-                        print("AKDGJKHDKJSGH",expression)
+                        #if expression or variable
+                        
+                        #check if variable or expression
                         if len(expression.split(" ")) > 1:
+                            #if expression
+                            
                             # Split the expression into tokens
                             expression_tokens = expression.split(" ")
-                            expr_counter = 0
                             expression_tokens_final = []
                             new_value = None
-                            
-                            # line num = tokens[0]
+                            current_token = ""
+                            tokens_dict = dict(tokens[1:])
+
+                            #get the tokens of the expression
                             for expr in expression_tokens:
-                                print(expr)
-                                for tkn in tokens[1:]:
-                                    if expr in tkn:
-                                        expression_tokens_final.append(tkn)
-                                        break
+                                current_token += " " + expr
+                                current_token = current_token.strip()
+
+                                if current_token in tokens_dict:
+                                    expression_tokens_final.append((current_token, tokens_dict[current_token]))      
+                                    current_token = ""
                             
                             new_classification = expression_tokens_final[0][1]
+                            
                             #evaluate the expression
                             if new_classification == "Arithmetic Operator" or new_classification == "Boolean Operator":
                                 new_value = arithmetic_analyzer(expression_tokens_final, tokens[0], expression)
+                                new_value = str(new_value)
                             else:
                                 if new_classification == 'Identifier':
                                     new_value = analyze(expression, new_classification, tokens[0], expression_tokens_final)
                                 else:
-                                    # print("hereeeeeeeeeee", keyword)
                                     new_value = analyze(expression, new_classification, tokens[0], expression_tokens_final)
                             
-                                if re.match(r'\d+\.\d+', new_value): 
-                                    function_parameters[parameter_name] = {"value": float(new_value), "data type": "NUMBAR"}
-                                elif new_value.isdigit():  # Check for number
-                                    function_parameters[parameter_name] = {"value": int(new_value), "data type": "NUMBR"}
-                                elif new_value in ('WIN', 'FAIL'):  # Check for boolean
-                                    function_parameters[parameter_name] = {"value": new_value, "data type": "TROOF"}
-                                elif isinstance(new_value, str): 
-                                    function_parameters[parameter_name] = {"value": new_value, "data type": "YARN"}
-                            print("ETOOOOOOOOOOOOOOOOOOO", new_value)
-                            
+                            #get the data type of the evaluated expression
+                            new_data_type = get_data_type(new_value)
+                            if new_data_type in ("NUMBAR", "NUMBR", "TROOF", "YARN"):
+                                if new_data_type == "NUMBAR": 
+                                    float(new_value) 
+                                elif new_data_type == "NUMBR": 
+                                    int(new_value) 
+                                    
+                                #add to dictionary
+                                function_parameters[parameter_name] = {"value": new_value, "data type": new_data_type}     
                         else:
+                            # if variable
+                            # check if variable exists
                             if expression in variables:
                                 function_var_value = variables[expression]['value']
                                 function_var_datatype = variables[expression]['data type']
@@ -1526,18 +1503,11 @@ def function_analyzer(line, tokens):
                                 return
                     param_counter+=1
                 
-                
                 variables = function_parameters
-                print("FUNCTIOINSSSSSSSSSSSSSSSSSS",variables)
                 line_counter = 0
                 
                 for code_block in access_function[2]:
-                    # check if variable exists in parameters???
-                    existing, no_var = var_in_param(code_block[1:][0], function_parameters)
-                    
-                    # if no errors, evaluate
-                    # if existing:
-                        #evaluate code block of function
+                    # existing, no_var = var_in_param(code_block[1:][0], function_parameters)
                     
                     code_line = access_function[1][line_counter]
                     code_line_number = code_block[0]
@@ -1552,21 +1522,33 @@ def function_analyzer(line, tokens):
                             code_tuples = code_tuples[1:]
                             keyword = code_tuples[0][1]
                             has_return = True
-                            # print("ETOOOOOOOOOOOO", keyword)
+                            
+                            #if not expression
+                            if len(code_tuples) == 1:
+                                check_expression = get_data_type(code_line.strip())
+                                if check_expression == "ELSE":
+                                    # check if variable exist
+                                    if code_line.strip() in variables:
+                                        return_value = str(variables[code_line.strip()]['value']) 
+                                    else:
+                                        print(f"Error in line {code_line_number}: Variable '{code_line.strip()}' is not a function parameter.")
+                                else:
+                                    return_value = str(code_line.strip())
+                                break
                         else:
                             if 'IT' not in temp_variables:
                                 temp_variables['IT'] = {'value': None, 'data type': 'NOOB'}
                             else:
                                 temp_variables['IT']['value'] = None
-                                variables['IT']['data type'] = 'NOOB'
-                        # break
+                                temp_variables['IT']['data type'] = 'NOOB'
+                            break
                                 
                     if keyword == "Break Keyword":
                         if 'IT' not in temp_variables:
                             temp_variables['IT'] = {'value': None, 'data type': 'NOOB'}
                         else:
                             temp_variables['IT']['value'] = None
-                            variables['IT']['data type'] = 'NOOB'
+                            temp_variables['IT']['data type'] = 'NOOB'
                         break
  
                     # =============== LOOPS ===============
@@ -1585,27 +1567,19 @@ def function_analyzer(line, tokens):
                     if not is_loop:
                         if keyword == "Output Keyword":
                             return_value = print_analyzer(code_tuples, code_line_number)
-                            # if b is not None:
-                            #     print("line", code_line_number,": ", b)
                         if keyword == "Arithmetic Operator" or keyword == "Boolean Operator":
-                            # print("pumasok here")
                             return_value = arithmetic_analyzer(code_tuples, code_line_number, code_line)
-                            # if b is not None:
-                            #     print("line",code_line_number,": ", b)    
+                            return_value = str(return_value)
                         else:
                             if keyword == 'Identifier':
                                 return_value = analyze(code_line, keyword, code_line_number, code_tuples)
                             else:
-                                # print("hereeeeeeeeeee", keyword)
                                 return_value = analyze(code_line, keyword, code_line_number, code_tuples)
                     
                     if has_return == True:
                         break
                     
-                    line_counter+=1
-                    # else:
-                    #     print(f"Error in line {code_line_number}: Variable {no_var} not a parameter.")
-                          
+                    line_counter+=1        
             else:
                 print(f"Error in line {tokens[0]}: Number of parameters do not match.")
         else:
@@ -1616,20 +1590,13 @@ def function_analyzer(line, tokens):
     if has_return == True:
         #no error
         if return_value != None:
-            #get the data type of the returned value
-            if re.match(r'\d+\.\d+', return_value): 
-                # function_parameters[parameter_name] = {"value": expression, "data type": "NUMBAR"}
-                return_value_type = "NUMBAR"
-            elif return_value.isdigit():  # Check for number
-                # function_parameters[parameter_name] = {"value": expression, "data type": "NUMBR"}
-                return_value_type = "NUMBR"
-            elif return_value in ('WIN', 'FAIL'):  # Check for boolean
-                # function_parameters[parameter_name] = {"value": expression, "data type": "TROOF"}
-                return_value_type = "TROOF"
-            elif return_value.startswith('"') and return_value.endswith('"'): 
-                # function_parameters[parameter_name] = {"value": expression, "data type": "YARN"}
-                return_value_type = "YARN"
-                
+            
+            return_value_type = get_data_type(return_value)
+            if return_value_type in ("NUMBAR", "NUMBR", "TROOF", "YARN"):
+                if return_value_type == "NUMBAR": 
+                    float(return_value) 
+                elif return_value_type == "NUMBR": 
+                    int(return_value)                 
             if 'IT' not in temp_variables:
                 temp_variables['IT'] = {'value': return_value, 'data type': return_value_type}
             else:
