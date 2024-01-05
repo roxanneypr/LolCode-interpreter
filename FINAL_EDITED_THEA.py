@@ -1119,7 +1119,7 @@ def analyze(line, classification, line_number, all_tokens):
 
 def if_else_statement(content, lines):
     global condition_index, if_else_condition
-    
+    # print(f'YOOOOOOO\ncondition index {condition_index}\n\n\nif else condition {if_else_condition}')
     if 'IT' not in variables:
         # print(if_else_condition)
         print(f"Error in line {if_else_condition[0][0]}: Accessing a null value.")
@@ -1166,28 +1166,22 @@ def if_else_statement(content, lines):
     # similar format to lines 
         if_else_condition_newformat = [[item[0]] + item[1] if len(item) > 1 else [item[0]] for item in if_else_condition]
         removed_comment_cond = remove_comments(content[if_else_condition[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index])
-        
+        # print("if new format", if_else_condition_newformat)
         # print("removed comment", if_else_condition_newformat[condition_index][1:])
         
         if if_else_condition[inner_condition_index][1][0][1] == 'Arithmetic Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Boolean Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Comparison Operator':
             b = arithmetic_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines)
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
-
-            
         elif if_else_condition[inner_condition_index][1][0][1] == 'Output Keyword':
             b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0])
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
         elif if_else_condition[inner_condition_index][1][0][1] == 'Function Call keyword':
-            pass
+            # print(f'{content[if_else_condition_newformat[inner_condition_index][0]-1]}\n{if_else_condition_newformat[inner_condition_index]}')
+            function_analyzer(content[if_else_condition_newformat[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index])
         else:
             if if_else_condition[inner_condition_index][1][0][1] == 'Identifier':
-            
-            # print()   
-                # analyze(content[condition_index], if_else_condition[condition_index][1][1][1], if_else_condition[condition_index][0], tokens[1:])
-                # print("=======", if_else_condition[condition_index][1:][0])
-                
                 analyze(removed_comment_cond, if_else_condition[inner_condition_index][1][1][1], if_else_condition[inner_condition_index][0], if_else_condition[inner_condition_index][1:][0])
             else:
                 analyze(removed_comment_cond,  if_else_condition[inner_condition_index][1][0][1], if_else_condition[inner_condition_index][0], if_else_condition[inner_condition_index][1:][0])
@@ -1214,7 +1208,7 @@ def loop_analyzer():
         
         #check if loop expression has correct syntax
         #TO ADD
-               
+        
         #check if label is correct for ending loop delimeter
         if loop_variable_end.strip() == loop_label.strip():
             
@@ -1254,7 +1248,7 @@ def loop_analyzer():
                                 
                     #Execute the loop based on the operation and repeat condition
                     while (repeat_keyword == "TIL" and evaluate == "FAIL") or \
-                          (repeat_keyword == "WILE" and evaluate == "WIN"):
+                        (repeat_keyword == "WILE" and evaluate == "WIN"):
                         
                         #Execute loop code block 
                         for loop_code_line in loop_tokens_code:
@@ -1264,7 +1258,7 @@ def loop_analyzer():
                             if classification == "Break Keyword":
                                 is_GTFO = True
                                 break            
-                                         
+                                        
                             if classification == "Output Keyword":
                                 b = print_analyzer(loop_code_line[1:][0], loop_code_line[0])
                                 if b is not None:
@@ -1579,7 +1573,7 @@ def function_analyzer(line, tokens):
                             temp_variables['IT']['value'] = None
                             temp_variables['IT']['data type'] = 'NOOB'
                         break
- 
+
                     # =============== LOOPS ===============
                     if keyword == "Loop Start Delimiter":
                         is_loop = True
@@ -1672,18 +1666,21 @@ def switch_case_analyzer(content, lines):
             temp = switch_case_condition[1][1][1][0]
         
         # print(type(temp))
-        
+        switch_case_condition_newformat = [[item[0]] + item[1] if len(item) > 1 else [item[0]] for item in switch_case_condition]
+
         if temp == variables['IT']['value']:
+
             # print("check switch here",switch_case_condition[1][1][1][0], variables['IT']['value'])
             # if switch_case_condition[2][1][0][1] == "Arithmetic Operator" or  switch_case_condition[2][1][0][1] == "Boolean Operator":
             #     pass
             for i in range(2, len(switch_case_condition)):
+                
                 # print(switch_case_condition[i][1][0][1])
                 if switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter" or switch_case_condition[i][1][0][1] == "Break Keyword" or switch_case_condition[i][1][0][1] == "Default Case Keyword":
                     break
                 else:
                     # print(i)
-                    if switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator":
+                    if switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
                         # print(f'yooo {switch_case_condition[i][0]}')
                         b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines)
                         
@@ -1692,9 +1689,14 @@ def switch_case_analyzer(content, lines):
                             print("line",switch_case_condition[i][0],": ", b)
                         # print("hereee", b)
                     elif switch_case_condition[i][1][0][1] == "Output Keyword":
+                        # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+
                         b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0])
                         if b is not None:
                             print("line",switch_case_condition[i][0],": ", b)
+                    elif switch_case_condition[i][1][0][1] == "Function Call keyword":
+                        # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+                        function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i])
                     else:
                         removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
                         # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
@@ -1723,7 +1725,7 @@ def switch_case_analyzer(content, lines):
                     break
                 else:
                     # print(i)
-                    if switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator":
+                    if switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
                         # print(f'yooo {switch_case_condition[i][0]}')
                         b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines)
                         
@@ -1732,9 +1734,14 @@ def switch_case_analyzer(content, lines):
                             print("line",switch_case_condition[i][0],": ", b)
                         # print("hereee", b)
                     elif switch_case_condition[i][1][0][1] == "Output Keyword":
+                        # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+
                         b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0])
                         if b is not None:
                             print("line",switch_case_condition[i][0],": ", b)
+                    elif switch_case_condition[i][1][0][1] == "Function Call keyword":
+                        # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+                        function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i])
                     else:
                         removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
                         # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
