@@ -2,15 +2,19 @@ HAI
 WAZZUP
 I HAS A NUM ITZ "HELLO" BTW hslkdnfk sdjfks
 I HAS A str1 ITZ "Jea"
-I HAS A str2 ITZ "Anne"
+I HAS A str2 ITZ 123
 I HAS A temp ITZ 2
 
 BUHBYE
 
-HOW IZ I sample_function YR param1 
+BOTH SAEM 10 AN 2 BTW result is stored in IT
+O RLY?
+YA RLY
+SUM OF 23 AN 54
+NO WAI BTW else
+SUM OF 23 AN 55
+OIC
 
-IF U SAY SO
+MAEK str1 A NUMBR
 
-I IZ sample_function YR SMOOSH "sdfkj" AN "jdsf" MKAY 
-
-KTHXBYE
+KTHXBYE 
