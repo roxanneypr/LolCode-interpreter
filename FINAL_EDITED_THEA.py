@@ -170,6 +170,7 @@ condition_index = []
 loop_lines = []
 loop_tokens = []
 is_loop = False
+is_var_assignment = False
 
 #for function
 function_lines =  []
@@ -494,8 +495,19 @@ def arithmetic_analyzer(line, line_number, untokenized_line):
             return result
     
     #print(stack)
-    if len(stack) > 1:
+    if len(stack) != 1:
         error_prompt(line_number, "Expression error.")
+
+    if is_var_assignment == False:
+        if stack[0] is not None:
+            if stack[0] == True:
+                variables['IT'] = {'value': "WIN", 'data type': "TROOF"}
+            elif stack[0] == False:
+                variables['IT'] = {'value': "FAIL", 'data type': "TROOF"}
+            else:
+                variables['IT'] = {'value': stack[0], 'data type': datatypes[type(stack[0]).__name__]}
+    else:
+        is_var_assignment = False
     
     if stack[0] == True:
         return "WIN"
@@ -2008,12 +2020,6 @@ def tokenize(content):
                         
                         
                         b = arithmetic_analyzer(removed_tuple, tokens[0], lines)
-                        if removed_tuple[0][1] == "Arithmetic Operator" or removed_tuple[0][1] == "Boolean Operator" or removed_tuple[0][1] == "Comparison Operator":
-                            if b is not None:
-                                if b == "WIN" or b == "FAIL":
-                                    variables['IT'] = {'value': b, 'data type': "TROOF"}
-                                else:
-                                    variables['IT'] = {'value': b, 'data type': datatypes[type(b).__name__]}
                         #print("ETOOOOOOOOOOOOOO")
                         #print("removed_tuple", removed_tuple)
                         #print("tokens[0]", tokens[0])
