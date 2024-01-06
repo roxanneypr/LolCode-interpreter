@@ -1175,8 +1175,7 @@ def if_else_statement(content, lines, self):
         print(f"Error in line {if_else_condition[0][0]}: No If Keyword found.")
         exit(0)
     if len(else_keywords) == 0:
-        print(f"Error in line {if_else_condition[0][0]}: No Else Keyword found.")
-        exit(0)
+        return
 
     # check if the if and else keywords have codeblocks
     for i in if_keywords:
@@ -1711,23 +1710,36 @@ def function_analyzer(line, tokens, self):
 
 def switch_case_analyzer(content, lines, self):
     global switch_case_condition, temp, default_case_index
-    # will be used if typecasting to int or float is needed
-    # temp = 0
-    # for i in range(len(switch_case_condition)):
-    #     print("*",switch_case_condition[i])
-    
-    # print("\nswitch_case_condition", switch_case_condition)
-    # print("\ncontent", content)
-    # print("\nlines", lines)
+
 
     print(switch_case_condition)
+
+    # check the existence of omg and omgwtf keywords and their respective codeblocks
+    case_keywords = [i for i, x in enumerate(switch_case_condition) if x[1][0][1] == "Case Keyword"]
+    else_keywords = [i for i, x in enumerate(switch_case_condition) if x[1][0][1] == "Default Case Keyword"]
+
+    # if either the length of case_keywords or else_keywords is 0, then there is no respective keyword found
+    if len(case_keywords) == 0:
+        print(f"Error in line {switch_case_condition[0][0]}: No Case Keyword found.")
+        exit(0)
+    if len(else_keywords) == 0:
+        return
+
+    # check if the case and else keywords have codeblocks
+    for i in case_keywords:
+        if i+1 >= len(switch_case_condition) or switch_case_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Default Case Keyword"]:
+            print(f"Error in line {switch_case_condition[i][0]}: 'OMG' has no code block.")
+            exit(0)
+
+    for i in else_keywords:
+        if i+1 >= len(switch_case_condition) or switch_case_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Default Case Keyword"]:
+            print(f"Error in line {switch_case_condition[i][0]}: 'OMGWTF' has no code block.")
+            exit(0)
 
     if 'IT' not in variables:
         # print(if_else_condition)
         print(f"Error in line {if_else_condition[0][0]}: Accessing a null value.")
         exit(0)
-
-    
 
     match = re.match(literal_pattern, switch_case_condition[1][1][1][0])
     # this algo is for the OMG keyword where it will check if the value of IT is equal to the value literal
@@ -1754,13 +1766,15 @@ def switch_case_analyzer(content, lines, self):
             for i in range(2, len(switch_case_condition)):
                 
                 # print(switch_case_condition[i][1][0][1])
-                if switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter" or switch_case_condition[i][1][0][1] == "Break Keyword" or switch_case_condition[i][1][0][1] == "Default Case Keyword":
+                if switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter" or switch_case_condition[i][1][0][1] == "Default Case Keyword":
                     break
                 else:
                     # print(i)
-                    if switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
+                    if switch_case_condition[i][1][0][1] == "Break Keyword":
+                        break
+                    elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
                         # print(f'yooo {switch_case_condition[i][0]}')
-                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
+                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines)
                         
                         # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
                         if b is not None:
@@ -1769,9 +1783,8 @@ def switch_case_analyzer(content, lines, self):
                     elif switch_case_condition[i][1][0][1] == "Output Keyword":
                         # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
 
-                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], self)
+                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0])
                         if b is not None:
-                            console_dislay(b, self)
                             print("line",switch_case_condition[i][0],": ", b)
                     elif switch_case_condition[i][1][0][1] == "Function Call keyword":
                         # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
@@ -1781,9 +1794,9 @@ def switch_case_analyzer(content, lines, self):
                         # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
                         # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
                         if switch_case_condition[i][1][0][1] == 'Identifier':
-                            analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+                            analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:])
                         else:
-                            analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+                            analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:])
                         # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
 
 
@@ -1800,13 +1813,15 @@ def switch_case_analyzer(content, lines, self):
             for i in range(default_case_index+1, len(switch_case_condition)):
                 
                 # print(switch_case_condition[i][1][0][1])
-                if switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter" or switch_case_condition[i][1][0][1] == "Break Keyword":
+                if switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter":
                     break
                 else:
                     # print(i)
-                    if switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
+                    if switch_case_condition[i][1][0][1] == "Break Keyword":
+                        break
+                    elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
                         # print(f'yooo {switch_case_condition[i][0]}')
-                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
+                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines)
                         
                         # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
                         if b is not None:
@@ -1815,15 +1830,12 @@ def switch_case_analyzer(content, lines, self):
                     elif switch_case_condition[i][1][0][1] == "Output Keyword":
                         # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
 
-                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], self)
+                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0])
                         if b is not None:
                             print("line",switch_case_condition[i][0],": ", b)
-
-                            console_dislay(b, self)
                     elif switch_case_condition[i][1][0][1] == "Function Call keyword":
                         # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
                         function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i])
-
                     else:
                         removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
                         # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
@@ -2052,7 +2064,7 @@ def tokenize(content, self):
                     else:
                         if removed_tuple[0][0] == "OIC":
                             switch_case_condition.append([tokens[0], removed_tuple])
-                            switch_case_analyzer(content, lines)
+                            switch_case_analyzer(content, lines, self)
                             
 
                             switch_delimiter = False
