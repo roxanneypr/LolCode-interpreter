@@ -135,9 +135,17 @@ variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( I
 typecast_pattern = re.compile(r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)( A (' + '|'.join(type_literal_syntax[:-1]) + ')| ' + type_literal_syntax[-1] + ')\s*( BTW .*)?\s*$')
 reassignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)\s*((IS NOW A)\s*(' + '|'.join(type_literal_syntax) + ')|(R MAEK)\s*([a-zA-Z]+[a-zA-Z0-9_]*)\s*(' + '|'.join(type_literal_syntax) + '))\s*(BTW .*)?$')       
 assignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)( R (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$')        
-loop_pattern = re.compile(r"IM IN YR ([a-zA-Z][a-zA-Z0-9_]*) (UPPIN|NERFIN) YR ([a-zA-Z][a-zA-Z0-9_]*) ((TIL|WILE) (.+))?")
-function_pattern = re.compile(r'HOW IZ I (\w+)(?: YR (\w+)(?: AN YR (\w+)(?: AN YR (\w+))?)?)? *$')
-# function_pattern = re.compile(r'HOW IZ I (\w+)(?: YR ([a-zA-Z_][a-zA-Z0-9_]*)(?: AN YR ([a-zA-Z_][a-zA-Z0-9_]*)(?: AN YR ([a-zA-Z_][a-zA-Z0-9_]*))?)?)? *$')
+
+# original loop_pattern
+# loop_pattern = re.compile(r"IM IN YR ([a-zA-Z][a-zA-Z0-9_]*) (UPPIN|NERFIN) YR ([a-zA-Z][a-zA-Z0-9_]*) ((TIL|WILE) (.+))?")
+# new loop_pattern
+loop_pattern = re.compile(r"IM IN YR (\b[a-zA-Z][a-zA-Z0-9_]*\b) (UPPIN|NERFIN) YR (\b[a-zA-Z][a-zA-Z0-9_]*\b) ((TIL|WILE) (.+))")
+
+
+# old function used in the original working code
+# function_pattern = re.compile(r'HOW IZ I (\w+)(?: YR (\w+)(?: AN YR (\w+)(?: AN YR (\w+))?)?)? *$')
+# new pattern
+function_pattern = re.compile(r'HOW IZ I ([a-zA-Z]\w*)(?: YR ([a-zA-Z]\w*)(?: AN YR ([a-zA-Z]\w*)(?: AN YR ([a-zA-Z]\w*))?)?)? *$')
 # variable_function_pattern = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
 # Potential keywords array
@@ -1243,14 +1251,14 @@ def loop_analyzer():
                         elif isinstance(item, tuple) and (item[0] == 'TIL' or item[0] == 'WILE'):
                             found_til_or_wile = True
 
-                    # print("EXPRESSION TOKENS=====", loop_expression_tokens)
-                    
-                    evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0], loop_expression)
+                    # print("loop_expression_tokens: ", loop_expression_tokens)
+                    # print("loop_tokens[0][0]: ", loop_tokens[0][0])
+                    # print("loop_expression: ", loop_expression)
+                    evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0][0], loop_expression)
                     # print("HEREEEEEEEEEEEEE: ", evaluate)
                     # evaluate_expression = True
                     loop_block_counter = 0
                     is_GTFO = False
-                    # print("evaluate_expression: ", evaluate_expression)
                                 
                     #Execute the loop based on the operation and repeat condition
                     while (repeat_keyword == "TIL" and evaluate == "FAIL") or \
@@ -1258,9 +1266,8 @@ def loop_analyzer():
                         
                         #Execute loop code block 
                         for loop_code_line in loop_tokens_code:
-                            classification = loop_code_line[1][0][1]   
+                            classification = loop_code_line[1][0][1]
                             
-                            # print("CLASSIFICATIONNNNNN:", classification)
                             if classification == "Break Keyword":
                                 is_GTFO = True
                                 break            
@@ -1270,16 +1277,21 @@ def loop_analyzer():
                                 if b is not None:
                                     # print(loop_code_line[1:])
                                     print("THISSSSS",loop_code_line[0],": ", b)
-                            if classification == "Arithmetic Operator" or classification == "Boolean Operator":
+                            if classification == "Arithmetic Operator" or classification == "Boolean Operator" or classification == "Comparison Operator":
                                 b = arithmetic_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter])
                                 if b is not None:
                                     print("line", loop_code_line[0],": ", b)
                             if classification == "Function Call keyword":
-                                function_analyzer(loop_block[loop_block_counter], loop_code_line[1:][0])
+                                tokens_loop = [loop_code_line[0]]
+                                
+                                for to_add in loop_code_line[1:][0]:
+                                    tokens_loop.append(to_add)
+                                
+                                function_analyzer(loop_block[loop_block_counter], tokens_loop)
                             else:
                                 # removed_comment = remove_comments(loop_block[loop_block_counter], loop_code_line)       
-                                if loop_code_line[1][1] == 'Identifier':
-                                    analyze(loop_block[loop_block_counter], classification, loop_code_line[0], loop_code_line[1:][0])
+                                if classification == 'Identifier':
+                                    analyze(loop_block[loop_block_counter], loop_code_line[1][1][1], loop_code_line[0], loop_code_line[1:][0])
                                 else:
                                     analyze(loop_block[loop_block_counter], classification, loop_code_line[0], loop_code_line[1:][0])
 
@@ -1310,20 +1322,9 @@ def loop_analyzer():
                 print(f"Error in lineeeeee {loop_tokens[0][0]}: Variable '{loop_variable}' is not yet declared.")
         else:
             print(f"Error in line {loop_tokens[len(loop_tokens)-1][0]}: Label '{loop_variable_end}' does not match loop label '{loop_label}'.")
-        
-        # print("Label:", loop_label)
-        # print("Operation:", loop_operation)
-        # print("Variable:", loop_variable)
-        # print("Repeat:", repeat_keyword)
-        # print("Expression:", loop_expression)
-        # print("Loop Block:", loop_block)
-        # print("Loop_variable_end", loop_variable_end)
-        # loop_variable_end = line.replace("IM OUTTA YR ", "")
     else:
         print(f"Error in line {loop_tokens[0][0]}: Incorrect format for loops.")
-    
-    # print(loop_lines)
-    # print(loop_tokens)
+
     #Reset the necessary variables
     loop_lines = []
     loop_tokens = []
@@ -1394,8 +1395,11 @@ def function_analyzer(line, tokens):
     temp_variables = variables.copy()
     parameter_number = 0
     param_expressions = []
+    # print(line, tokens[0])
+    # print("==================== FUNCTION ANALYZER ====================")
+    function_line_number = tokens[0]
+    # print("TOKENNNNNNNN", tokens)
     
-
     combined_pattern_str = (
     arithmetic_pattern + '|' +
     comparison_pattern + '|' +
@@ -1501,7 +1505,7 @@ def function_analyzer(line, tokens):
                             new_classification = expression_tokens_final[0][1]
                             
                             #evaluate the expression
-                            if new_classification == "Arithmetic Operator" or new_classification == "Boolean Operator":
+                            if new_classification == "Arithmetic Operator" or new_classification == "Boolean Operator" or new_classification == "Comparison Operator":
                                 new_value = arithmetic_analyzer(expression_tokens_final, tokens[0], expression)
                                 new_value = str(new_value)
                             else:
@@ -1565,13 +1569,15 @@ def function_analyzer(line, tokens):
                                     return_value = str(code_line.strip())
                                 break
                         else:
+                            # FOUND YR has no expression
                             if 'IT' not in temp_variables:
                                 temp_variables['IT'] = {'value': None, 'data type': 'NOOB'}
                             else:
                                 temp_variables['IT']['value'] = None
                                 temp_variables['IT']['data type'] = 'NOOB'
                             break
-                                
+                    
+                    # GTFO is encountered
                     if keyword == "Break Keyword":
                         if 'IT' not in temp_variables:
                             temp_variables['IT'] = {'value': None, 'data type': 'NOOB'}
@@ -1579,7 +1585,7 @@ def function_analyzer(line, tokens):
                             temp_variables['IT']['value'] = None
                             temp_variables['IT']['data type'] = 'NOOB'
                         break
- 
+                    
                     # =============== LOOPS ===============
                     if keyword == "Loop Start Delimiter":
                         is_loop = True
@@ -1594,27 +1600,39 @@ def function_analyzer(line, tokens):
                         loop_analyzer()    
 
                     if not is_loop:
+                        # =============== PRINTING ===============
                         if keyword == "Output Keyword":
-                            return_value = print_analyzer(code_tuples, code_line_number)
-                        if keyword == "Arithmetic Operator" or keyword == "Boolean Operator":
+                            to_print = print_analyzer(code_tuples, code_line_number)
+                            if to_print is not None:
+                                print("THISSSSS", code_line_number,": ", to_print)
+                                
+                        # =============== ARITHMETIC OPERATIONS ===============
+                        if keyword == "Arithmetic Operator" or keyword == "Boolean Operator" or keyword == "Comparison Operator":
                             return_value = arithmetic_analyzer(code_tuples, code_line_number, code_line)
                             return_value = str(return_value)
                         else:
+                            # =============== TYPECASTING ===============
                             if keyword == 'Identifier':
-                                return_value = analyze(code_line, keyword, code_line_number, code_tuples)
+                                return_value = analyze(code_line, code_tuples[1][1], code_line_number, code_tuples)
                             else:
+                                # =============== CONCATENATION AND ASSIGNMENT ===============
                                 return_value = analyze(code_line, keyword, code_line_number, code_tuples)
+                        
+                        # TO ADD:
+                        # 1. IF ELSE
+                        # 2. SWITCH
+                        # 3. INPUT
                     
                     if has_return == True:
                         break
                     
                     line_counter+=1        
             else:
-                print(f"Error in line {tokens[0]}: Number of parameters do not match.")
+                print(f"Error in line {function_line_number}: Number of parameters do not match.")
         else:
-            print(f"Error in line {tokens[0]}: Function '{function_name}' not yet declared.")
+            print(f"Error in line {function_line_number}: Functionnnnnnnnnnn '{function_name}' not yet declared.")
     else:
-        print(f"Error in line {tokens[0]}: Incorrect format for function call.")
+        print(f"Error in line {function_line_number}: Incorrect format for function call.")
     
     if has_return == True:
         #no error
@@ -1986,16 +2004,17 @@ def tokenize(content):
                         loop_lines.append(removed_comment)
                         loop_tokens.append([line_number, removed_tuple])
                         # continue
-                    
-                    #set is_loop to False and call loop analyzer
-                    if tokens[1][0] == "IM OUTTA YR" and is_function == False:
-                        # print("Pumasok baaaaaaaaaaaaaa")
-                        is_loop = False
-                        loop_analyzer()
+
+                    # tabbed this
+                        #set is_loop to False and call loop analyzer
+                        if tokens[1][0] == "IM OUTTA YR" and is_function == False:
+                            # print("Pumasok baaaaaaaaaaaaaa")
+                            is_loop = False
+                            loop_analyzer()
                     
                     #=======================FUNCTION=======================
 
-                    if tokens[1][0] == "HOW IZ I":
+                    if tokens[1][0] == "HOW IZ I" and is_loop == False:
                         # print('ETO  BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
                         is_function = True
                     
@@ -2006,13 +2025,13 @@ def tokenize(content):
                         function_tokens.append([line_number, removed_tuple])
                         # continue
                     
-                    #set is_function to False and call function analyzer
-                    if tokens[1][0] == "IF U SAY SO":
-                        # print('ETO  BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA if you say', is_function)
-                        is_function = False
-                        function_checker()
+                        #set is_function to False and call function analyzer
+                        if tokens[1][0] == "IF U SAY SO":
+                            # print('ETO  BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA if you say', is_function)
+                            is_function = False
+                            function_checker()
                     
-                    if tokens[1][0] == "I IZ":
+                    if tokens[1][0] == "I IZ" and is_loop == False and is_function == False:
                         function_analyzer(removed_comment, tokens)
                     
                     if is_function or is_loop == True:
