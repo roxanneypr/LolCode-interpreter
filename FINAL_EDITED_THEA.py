@@ -137,9 +137,17 @@ reassignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)\s*((IS NOW A)\s*('
 assignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)( R (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$')        
 loop_pattern = re.compile(r"IM IN YR ([a-zA-Z][a-zA-Z0-9_]*) (UPPIN|NERFIN) YR ([a-zA-Z][a-zA-Z0-9_]*) ((TIL|WILE) (.+))?")
 function_pattern = re.compile(r'HOW IZ I (\w+)(?: YR (\w+)(?: AN YR (\w+)(?: AN YR (\w+))?)?)? *$')
+if_else_pattern = re.compile(r'^(O RLY\?|YA RLY|NO WAI|OIC)$')
 # function_pattern = re.compile(r'HOW IZ I (\w+)(?: YR ([a-zA-Z_][a-zA-Z0-9_]*)(?: AN YR ([a-zA-Z_][a-zA-Z0-9_]*)(?: AN YR ([a-zA-Z_][a-zA-Z0-9_]*))?)?)? *$')
 # variable_function_pattern = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
-
+combined_pattern_str = (
+    arithmetic_pattern + '|' +
+    comparison_pattern + '|' +
+    smoosh_pattern_forfunc + '|' +
+    boolean_pattern + '|' +
+    literal_pattern + '|' +
+    variable_pattern_forfunc
+    )
 # Potential keywords array
 potential_keyword = ["I", "I HAS", "SUM", "DIFF", "PRODUKT", "QUOSHUNT", "MOD"
                     , "BIGGR", "SMALLR", "BOTH", "EITHER", "WON", "ANY", "ALL"
@@ -1117,59 +1125,82 @@ def analyze(line, classification, line_number, all_tokens):
             print(f"Error in line {line_number}: Assignment error.")
             exit(0)
 
+# performs the functionality of an if-else conditional statement
 def if_else_statement(content, lines):
     global condition_index, if_else_condition
-    # print(f'YOOOOOOO\ncondition index {condition_index}\n\n\nif else condition {if_else_condition}')
+
+    # check the existence of if and else keywords and their respective codeblocks
+    if_keywords = [i for i, x in enumerate(if_else_condition) if x[1][0][1] == "If Keyword"]
+    else_keywords = [i for i, x in enumerate(if_else_condition) if x[1][0][1] == "Else Keyword"]
+
+    # if either the length of if_keywords or else_keywords is 0, then there is no respective keyword found
+    if len(if_keywords) == 0:
+        print(f"Error in line {if_else_condition[0][0]}: No If Keyword found.")
+        exit(0)
+    if len(else_keywords) == 0:
+        print(f"Error in line {if_else_condition[0][0]}: No Else Keyword found.")
+        exit(0)
+
+    # check if the if and else keywords have codeblocks
+    for i in if_keywords:
+        if i+1 >= len(if_else_condition) or if_else_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Else Keyword"]:
+            print(f"Error in line {if_else_condition[i][0]}: 'YA RLY' has no code block.")
+            exit(0)
+
+    for i in else_keywords:
+        if i+1 >= len(if_else_condition) or if_else_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Else Keyword"]:
+            print(f"Error in line {if_else_condition[i][0]}: 'NO WAI' has no code block.")
+            exit(0)
+    
+    # check if the variable 'IT' exists
     if 'IT' not in variables:
-        # print(if_else_condition)
         print(f"Error in line {if_else_condition[0][0]}: Accessing a null value.")
         exit(0)
 
     # check if the value of the key 'IT' in variables is equal to WIN
+    # get the index of the first exression after the if or else keyword
     if variables['IT']['value'] == 'WIN':
+
         # find the tuple with 'If Keyword'
         for i in range(len(if_else_condition)):
             if if_else_condition[i][1][0][1] == "If Keyword":
-                # print("if", i+1)
-                # condition_index = i+1
                 condition_index.append(i+1)
                 break
     else:
+
+        # find the tuple with 'If Keyword'
         for i in range(len(if_else_condition)):
             if if_else_condition[i][1][0][1] == "Else Keyword":
-                # print("if", i+1)
-                # condition_index = i+1
                 condition_index.append(i+1)
                 break
-    if if_else_condition[condition_index[0]+1][1][0][1] != "If-Else or Switch-Case Delimiter" or if_else_condition[condition_index[0]+1][1][0][1] != "Else Keyword":
-        # print("======If-Else or Switch-Case Delimiter")
+
+    # get the succeeding expressions after the if or else keyword if it is more than one 
+    if if_else_condition[condition_index[0]+1][1][0][1] != "If-Else or Switch-Case Delimiter" or if_else_condition[condition_index[0]+1][1][0][1] != "Else Keyword" or if_else_condition[condition_index[0]+1][1][0][1] != "Break Keyword":        # print("======If-Else or Switch-Case Delimiter")
         if variables['IT']['value'] == 'WIN':
             for i in range(condition_index[0]+1, len(if_else_condition)):
-                # print("+", i, if_else_condition[i][1][0][1] )
-                if if_else_condition[i][1][0][1] != "Else Keyword":
-                    condition_index.append(i)
-                
-                else:
+                if if_else_condition[i][1][0][1] == "Else Keyword" or if_else_condition[i][1][0][1] == "If-Else or Switch-Case Delimiter":
                     break
+                else:
+                    condition_index.append(i)
         else:
             for i in range(condition_index[0]+1, len(if_else_condition)):
-                # print("+", i, if_else_condition[i][1][0][1] )
-                if if_else_condition[i][1][0][1] != "If-Else or Switch-Case Delimiter":
-                    condition_index.append(i)
-                
-                else:
+                if if_else_condition[i][1][0][1] == "If-Else or Switch-Case Delimiter":
                     break
+                else:
+                    condition_index.append(i)
 
-    # print(condition_index, "\n\n")
-
+    # perform the functionalities needed in the codeblock
     for inner_condition_index in condition_index:
-    # similar format to lines 
+
+        # similar format to lines 
         if_else_condition_newformat = [[item[0]] + item[1] if len(item) > 1 else [item[0]] for item in if_else_condition]
-        removed_comment_cond = remove_comments(content[if_else_condition[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index])
-        # print("if new format", if_else_condition_newformat)
-        # print("removed comment", if_else_condition_newformat[condition_index][1:])
         
-        if if_else_condition[inner_condition_index][1][0][1] == 'Arithmetic Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Boolean Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Comparison Operator':
+        # remove the comments in the line if there are any
+        removed_comment_cond = remove_comments(content[if_else_condition[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index])
+
+        if if_else_condition[inner_condition_index][1][0][1] == 'Break Keyword':
+            break
+        elif if_else_condition[inner_condition_index][1][0][1] == 'Arithmetic Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Boolean Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Comparison Operator':
             b = arithmetic_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines)
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
@@ -1185,6 +1216,7 @@ def if_else_statement(content, lines):
                 analyze(removed_comment_cond, if_else_condition[inner_condition_index][1][1][1], if_else_condition[inner_condition_index][0], if_else_condition[inner_condition_index][1:][0])
             else:
                 analyze(removed_comment_cond,  if_else_condition[inner_condition_index][1][0][1], if_else_condition[inner_condition_index][0], if_else_condition[inner_condition_index][1:][0])
+
 
 def loop_analyzer():
     global loop_lines, loop_tokens, if_keyword
@@ -1390,14 +1422,7 @@ def function_analyzer(line, tokens):
     param_expressions = []
     
 
-    combined_pattern_str = (
-    arithmetic_pattern + '|' +
-    comparison_pattern + '|' +
-    smoosh_pattern_forfunc + '|' +
-    boolean_pattern + '|' +
-    literal_pattern + '|' +
-    variable_pattern_forfunc
-    )
+    
     
     function_call_pattern = re.compile(
         r'I IZ ([a-zA-Z_][a-zA-Z_0-9]*)(?: YR ((?:' + combined_pattern_str + '))?(?: AN YR ((?:' + combined_pattern_str + '))?(?: AN YR ((?:' + combined_pattern_str + ')))?)?)? MKAY'
@@ -1642,7 +1667,7 @@ def switch_case_analyzer(content, lines):
     # print("\ncontent", content)
     # print("\nlines", lines)
 
-
+    print(switch_case_condition)
 
     if 'IT' not in variables:
         # print(if_else_condition)
@@ -2049,17 +2074,22 @@ def tokenize(content):
                     elif tokens[1][1] == "If Keyword":
                         if_keyword = True
                         if if_delimiter == False:
-                            print(f"Error in line {line_number}: No If Delimiter found.")
+                            print(f"Error in line {line_number}: Error in If Delimiter found.")
                             exit(0)
                     elif tokens[1][1] == "Else Keyword":
                         else_keyword = True
                         if if_delimiter == False:
-                            print(f"Error in line {line_number}: No If Delimiter found.")
+                            print(f"Error in line {line_number}: Error in If Delimiter found .")
                             exit(0)
                     # sets the flag to true when if delimiter is found
                     elif tokens[1][1] == "If Delimiter":
+                        
                         if_else_condition.append([tokens[0], removed_tuple])
                         if_delimiter = True
+                        # else:
+                        #     print(f"Error in line {line_number}: No expression found.")
+                        #     exit(0)
+
                     elif tokens[1][1] == "Case Keyword":
                         case_keyword = True
                         if switch_delimiter == False:
