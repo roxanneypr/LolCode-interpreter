@@ -115,9 +115,9 @@ type_literal = "(NOOB|TROOF|NUMBAR|NUMBR|YARN)"
 type_literal_syntax = ["NOOB", "TROOF", "NUMBAR", "NUMBR", "YARN"]
 
 # Additional regex for the semantics analyzer 
-wazzup_pattern = re.compile(r'^WAZZUP$')
-buhbye_pattern = re.compile(r'^BUHBYE$')
-kthxbye_pattern = re.compile(r'^KTHXBYE$')
+wazzup_pattern = re.compile(r'^\s*WAZZUP\s*$')
+buhbye_pattern = re.compile(r'^\s*BUHBYE\s*$')
+kthxbye_pattern = re.compile(r'^\s*KTHXBYE\s*$')
 # smoosh_pattern = re.compile(r'SMOOSH\s+"?[\w.]+"?(?:\s+AN\s+"?[\w.]+"?)*\s*$')
 # check this
 smoosh_pattern = re.compile(r'^SMOOSH\s+(\S+(\s+AN\s+(\S+|"([^"]*)"))*)\s*$')
