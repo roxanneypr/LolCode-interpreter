@@ -12,6 +12,9 @@ VISIBLE parameter
 VISIBLE NUMBERRRR
 IF U SAY SO
 
+IM IN YR looptry UPPIN YR temp2 TIL BOTH SAEM temp2 AN 12
 I IZ sample_function YR temp AN YR 12 MKAY
+IM OUTTA YR looptry
+
 
 KTHXBYE

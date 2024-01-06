@@ -135,7 +135,13 @@ variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( I
 typecast_pattern = re.compile(r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)(( A (' + '|'.join(type_literal_syntax[:-1]) + '))| YARN)\s*( BTW .*)?$')
 reassignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)\s*((IS NOW A)\s*(' + '|'.join(type_literal_syntax) + ')|(R MAEK)\s*([a-zA-Z]+[a-zA-Z0-9_]*)\s*(' + '|'.join(type_literal_syntax) + '))\s*(BTW .*)?$')       
 assignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)( R (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$')        
-loop_pattern = re.compile(r"IM IN YR ([a-zA-Z][a-zA-Z0-9_]*) (UPPIN|NERFIN) YR ([a-zA-Z][a-zA-Z0-9_]*) ((TIL|WILE) (.+))?")
+
+# original loop_pattern
+# loop_pattern = re.compile(r"IM IN YR ([a-zA-Z][a-zA-Z0-9_]*) (UPPIN|NERFIN) YR ([a-zA-Z][a-zA-Z0-9_]*) ((TIL|WILE) (.+))?")
+# new loop_pattern
+loop_pattern = re.compile(r"IM IN YR (\b[a-zA-Z][a-zA-Z0-9_]*\b) (UPPIN|NERFIN) YR (\b[a-zA-Z][a-zA-Z0-9_]*\b) ((TIL|WILE) (.+))")
+
+
 # old function used in the original working code
 # function_pattern = re.compile(r'HOW IZ I (\w+)(?: YR (\w+)(?: AN YR (\w+)(?: AN YR (\w+))?)?)? *$')
 # new pattern
@@ -1216,6 +1222,9 @@ def loop_analyzer():
                         elif isinstance(item, tuple) and (item[0] == 'TIL' or item[0] == 'WILE'):
                             found_til_or_wile = True
 
+                    # print("loop_expression_tokens: ", loop_expression_tokens)
+                    # print("loop_tokens[0][0]: ", loop_tokens[0][0])
+                    # print("loop_expression: ", loop_expression)
                     evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0][0], loop_expression)
                     # print("HEREEEEEEEEEEEEE: ", evaluate)
                     # evaluate_expression = True

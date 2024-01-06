@@ -1,1 +1,1 @@
-function_analyzer(loop_block[loop_block_counter], tokens_loop)
+loop_expression_tokens
