@@ -642,7 +642,7 @@ def print_analyzer(line, line_number, self):
             
             if op[0][1] == "Arithmetic Operator" or op[0][1] == "Boolean Operator" or op[0][1] == "Comparison Operator":
                 #print(f"expression: {expression[:-1]}")
-                new_value = arithmetic_analyzer(op, line_number, expression[:-1])
+                new_value = arithmetic_analyzer(op, line_number, expression[:-1], self)
                 toprint += str(new_value)
             else:
                 try:
@@ -903,7 +903,7 @@ def analyze(line, classification, line_number, all_tokens, self):
                                 global is_var_assignment
                                 is_var_assignment = True
                                 filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
-                                new_value = arithmetic_analyzer(filtered_tokens, line_number, line)
+                                new_value = arithmetic_analyzer(filtered_tokens, line_number, line, self)
                                 # print("new value", new_value)
                                 if re.match(integer_pattern, str(new_value)):
                                     variables[variable_name] = {'value': int(new_value), 'data type': 'NUMBR'}
@@ -1144,7 +1144,7 @@ def analyze(line, classification, line_number, all_tokens, self):
                             #remove tokens using expression
                             is_var_assignment = True
                             filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
-                            new_value = arithmetic_analyzer(filtered_tokens, line_number, line)
+                            new_value = arithmetic_analyzer(filtered_tokens, line_number, line, self)
                             
                             if re.match(integer_pattern, str(new_value)):
                                 variables[variable_name] = {'value': int(new_value), 'data type': 'NUMBR'}
@@ -1314,7 +1314,7 @@ def loop_analyzer(self):
                     # print("loop_expression_tokens: ", loop_expression_tokens)
                     # print("loop_tokens[0][0]: ", loop_tokens[0][0])
                     # print("loop_expression: ", loop_expression)
-                    evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0][0], loop_expression)
+                    evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0][0], loop_expression, self)
                     # print("HEREEEEEEEEEEEEE: ", evaluate)
                     # evaluate_expression = True
                     loop_block_counter = 0
@@ -1340,7 +1340,7 @@ def loop_analyzer(self):
                                     console_dislay(b, self)
                                     print("THISSSSS",loop_code_line[0],": ", b)
                             if classification == "Arithmetic Operator" or classification == "Boolean Operator" or classification == "Comparison Operator":
-                                b = arithmetic_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter])
+                                b = arithmetic_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter], self)
                                 if b is not None:
                                     print("line", loop_code_line[0],": ", b)
                             if classification == "Function Call keyword":
@@ -1349,13 +1349,13 @@ def loop_analyzer(self):
                                 for to_add in loop_code_line[1:][0]:
                                     tokens_loop.append(to_add)
                                 
-                                function_analyzer(loop_block[loop_block_counter], tokens_loop)
+                                function_analyzer(loop_block[loop_block_counter], tokens_loop, self)
                             else:
                                 # removed_comment = remove_comments(loop_block[loop_block_counter], loop_code_line)       
                                 if classification == 'Identifier':
-                                    analyze(loop_block[loop_block_counter], loop_code_line[1][1][1], loop_code_line[0], loop_code_line[1:][0])
+                                    analyze(loop_block[loop_block_counter], loop_code_line[1][1][1], loop_code_line[0], loop_code_line[1:][0], self)
                                 else:
-                                    analyze(loop_block[loop_block_counter], classification, loop_code_line[0], loop_code_line[1:][0])
+                                    analyze(loop_block[loop_block_counter], classification, loop_code_line[0], loop_code_line[1:][0], self)
 
                             #increment loop code block line
                             loop_block_counter += 1
@@ -1376,7 +1376,7 @@ def loop_analyzer(self):
                         elif loop_operation == "NERFIN":
                             variables[loop_variable]['value'] -= 1
                                                 
-                        evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0], loop_expression)
+                        evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0], loop_expression, self)
 
                 else:
                     print(f"Error in line {loop_tokens[0][0]}: Variable '{loop_variable}' is not of type NUMBR.")
@@ -1560,7 +1560,7 @@ def function_analyzer(line, tokens, self):
                             
                             #evaluate the expression
                             if new_classification == "Arithmetic Operator" or new_classification == "Boolean Operator" or new_classification == "Comparison Operator":
-                                new_value = arithmetic_analyzer(expression_tokens_final, tokens[0], expression)
+                                new_value = arithmetic_analyzer(expression_tokens_final, tokens[0], expression, self)
                                 new_value = str(new_value)
                             else:
                                 if new_classification == 'Identifier':
@@ -1656,21 +1656,21 @@ def function_analyzer(line, tokens, self):
                     if not is_loop:
                         # =============== PRINTING ===============
                         if keyword == "Output Keyword":
-                            to_print = print_analyzer(code_tuples, code_line_number)
+                            to_print = print_analyzer(code_tuples, code_line_number, self)
                             if to_print is not None:
                                 print("THISSSSS", code_line_number,": ", to_print)
                                 
                         # =============== ARITHMETIC OPERATIONS ===============
                         if keyword == "Arithmetic Operator" or keyword == "Boolean Operator" or keyword == "Comparison Operator":
-                            return_value = arithmetic_analyzer(code_tuples, code_line_number, code_line)
+                            return_value = arithmetic_analyzer(code_tuples, code_line_number, code_line, self)
                             return_value = str(return_value)
                         else:
                             # =============== TYPECASTING ===============
                             if keyword == 'Identifier':
-                                return_value = analyze(code_line, code_tuples[1][1], code_line_number, code_tuples)
+                                return_value = analyze(code_line, code_tuples[1][1], code_line_number, code_tuples, self)
                             else:
                                 # =============== CONCATENATION AND ASSIGNMENT ===============
-                                return_value = analyze(code_line, keyword, code_line_number, code_tuples)
+                                return_value = analyze(code_line, keyword, code_line_number, code_tuples, self)
                         
                         # TO ADD:
                         # 1. IF ELSE
@@ -1760,7 +1760,7 @@ def switch_case_analyzer(content, lines, self):
                     # print(i)
                     if switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
                         # print(f'yooo {switch_case_condition[i][0]}')
-                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines)
+                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
                         
                         # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
                         if b is not None:
@@ -1769,7 +1769,7 @@ def switch_case_analyzer(content, lines, self):
                     elif switch_case_condition[i][1][0][1] == "Output Keyword":
                         # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
 
-                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0])
+                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], self)
                         if b is not None:
                             console_dislay(b, self)
                             print("line",switch_case_condition[i][0],": ", b)
@@ -1806,7 +1806,7 @@ def switch_case_analyzer(content, lines, self):
                     # print(i)
                     if switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
                         # print(f'yooo {switch_case_condition[i][0]}')
-                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines)
+                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
                         
                         # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
                         if b is not None:
@@ -1815,7 +1815,7 @@ def switch_case_analyzer(content, lines, self):
                     elif switch_case_condition[i][1][0][1] == "Output Keyword":
                         # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
 
-                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0])
+                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], self)
                         if b is not None:
                             print("line",switch_case_condition[i][0],": ", b)
 
