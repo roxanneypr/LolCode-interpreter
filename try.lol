@@ -25,6 +25,6 @@ str1 R "23"
 MAEK str1 A NUMBR
 str2 R MAEK str2 YARN
 OIC
-
+GIMMEH temp
 
 KTHXBYE 
