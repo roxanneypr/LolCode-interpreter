@@ -1,5 +1,5 @@
 HAI           
-WAZZUP
+    WAZZUP
 I HAS A NUM ITZ "HELLO" BTW hslkdnfk sdjfks
 I HAS A str1 ITZ "Jea"
 I HAS A str2 ITZ 123
