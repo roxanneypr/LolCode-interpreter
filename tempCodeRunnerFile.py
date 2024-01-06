@@ -1,2 +1,1 @@
-
-            for i in range(1, len(tokens)):
+function_analyzer(loop_block[loop_block_counter], tokens_loop)
