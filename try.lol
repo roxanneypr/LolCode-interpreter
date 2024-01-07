@@ -7,6 +7,7 @@ I HAS A temp ITZ 2
 I HAS A temp2 ITZ 9
 BUHBYE
 
+
 SMOOSH "strsdgskjf" AN "thea" AN "rbjktg"
 
 HOW IZ I sample_function YR string AN YR number123 AN YR boolean
