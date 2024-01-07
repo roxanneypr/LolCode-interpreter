@@ -7,7 +7,22 @@ I HAS A temp ITZ 2
 I HAS A temp2 ITZ 9
 BUHBYE
 
-SUM OF 2 AN 9
-VISIBLE SMOOSH "strsdgskjf" AN "thea" AN "rbjktg"
+
+
+SMOOSH "strsdgskjf" AN "thea" AN "rbjktg"
+
+SUM OF 2 AN 2
+
+
+
+WTF? BTW uses value in IT
+OMG 3
+VISIBLE "1"
+OMG 4
+VISIBLE "2"
+OMGWTF
+VISIBLE "3"
+OIC
+
 
 KTHXBYE 
