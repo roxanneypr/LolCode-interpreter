@@ -7,33 +7,19 @@ I HAS A temp ITZ 2
 I HAS A temp2 ITZ 9
 BUHBYE
 
-HOW IZ I sample_function YR parameter AN YR NUMBERRRR
-VISIBLE parameter
-VISIBLE NUMBERRRR
+SMOOSH "strsdgskjf" AN "thea" AN "rbjktg"
+
+HOW IZ I sample_function YR string AN YR number123 AN YR boolean
+VISIBLE "THEA"
 IF U SAY SO
 
 
+BTW I IZ sample_function YR str1 AN YR 8 AN YR WIN MKAY
+I IZ sample_function YR str1 AN YR 8 AN YR WIN MKAY
 
+IM IN YR loop1 UPPIN YR temp2 TIL BOTH SAEM temp2 AN 10
+VISIBLE "THEA"
+IM OUTTA YR loop1
 
-
-
-HOW IZ I sample_function YR parameter AN YR NUMBERRRR
-VISIBLE parameter
-VISIBLE NUMBERRRR
-IF U SAY SO
-
-IM IN YR looptry UPPIN YR temp2 TIL BOTH SAEM temp2 AN 12
-I IZ sample_function YR temp AN YR 12 MKAY
-IM OUTTA YR looptry
-
-
-BOTH SAEM 10 AN 9
-O RLY?
-YA RLY
-GTFO
-NO WAI
-GTFO
-OIC
-GIMMEH temp
 
 KTHXBYE 
