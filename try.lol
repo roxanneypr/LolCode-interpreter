@@ -8,19 +8,21 @@ I HAS A temp2 ITZ 9
 BUHBYE
 
 
+
 SMOOSH "strsdgskjf" AN "thea" AN "rbjktg"
 
-HOW IZ I sample_function YR string AN YR number123 AN YR boolean
-VISIBLE "THEA"
-IF U SAY SO
+SUM OF 2 AN 2
 
 
-BTW I IZ sample_function YR str1 AN YR 8 AN YR WIN MKAY
-I IZ sample_function YR str1 AN YR 8 AN YR WIN MKAY
 
-IM IN YR loop1 UPPIN YR temp2 TIL BOTH SAEM temp2 AN 10
-VISIBLE "THEA"
-IM OUTTA YR loop1
+WTF? BTW uses value in IT
+OMG 3
+VISIBLE "1"
+OMG 4
+VISIBLE "2"
+OMGWTF
+VISIBLE "3"
+OIC
 
 
 KTHXBYE 
