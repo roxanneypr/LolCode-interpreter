@@ -203,7 +203,7 @@ is_error = False
 function_lines =  []
 function_tokens = []
 is_function = False
-function_var = {"FUNCTION VARIABLES": {'value': " ", 'data type': " "}}
+function_var = {"FUNCTION VARIABLES": {'value': " ======= ", 'data type': None}}
 
 #for switch case
 switch_delimiter = False
@@ -2218,7 +2218,7 @@ def tokenize(content, self):
                 break
             
             app.symbol_table.update(variables)
-            app.symbol_table.add_function_variables(function_var)
+            #app.symbol_table.add_function_variables(function_var)
             line_number += 1
             all_tokens.append(tokens)
     return all_tokens
@@ -2432,6 +2432,7 @@ class Console(tk.Frame):
 
         # Update LexemeTable with the new tokens
         app.lexeme_table.populate(app.tokens)
+        app.symbol_table.add_function_variables(function_var)
         #app.symbol_table.populate(variables)
         #app.symbol_table.populate(variables)
         #self.print_to_console(f"Executing code:\n{code}")
