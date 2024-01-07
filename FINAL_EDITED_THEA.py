@@ -198,11 +198,13 @@ is_loop = False
 is_loop_del = False
 is_var_assignment = False
 app = None
+is_error = False
 
 #for function
 function_lines =  []
 function_tokens = []
 is_function = False
+function_var = {"FUNCTION VARIABLES": {'value': " ", 'data type': " "}}
 is_function_del = False
 
 #for switch case
@@ -239,8 +241,10 @@ def console_dislay(message, self):
     self.console.print_to_console(f"{message}")
 
 def error_prompt(line_number, error_message, self):
+    global is_error
     print(f"Error in line {line_number}: {error_message}")
     self.console.print_to_console(f"Error in line {line_number}: {error_message}")
+    is_error = True
 
 def arithmetic(line_number, stack, operation, self):
     operations_dict = {
@@ -645,14 +649,18 @@ def print_analyzer(line, line_number, self):
             if op[0][1] == "Arithmetic Operator" or op[0][1] == "Boolean Operator" or op[0][1] == "Comparison Operator":
                 #print(f"expression: {expression[:-1]}")
                 new_value = arithmetic_analyzer(op, line_number, expression[:-1], self)
+                #def analyze(line, classification, line_number, all_tokens, self):
                 toprint += str(new_value)
             else:
                 try:
-                    new_value = analyze(op, line_number, expression[:-1])
-                    toprint += str(new_value)
+                    print(op)
+                    new_value = analyze(expression[:-1], op[0][1], line_number, op, self)
+                    toprint += str(variables['IT']['value'])
                 except:
+                    print("here")
                     error_prompt(line_number, "Print expression error.", self)
 
+    console_dislay(toprint, self)
     return toprint
 
 def input_analyzer(line, line_number, untokenized_line, self):
@@ -828,7 +836,36 @@ def analyze(line, classification, line_number, all_tokens, self):
                         to_concat.append(var_value)
                     else:
                         error_prompt(line_number, f"Variable '{token}' is not yet declared.", self)
+                        print(f"Error in line {line_number}: Variable '{token}' is not yet declared.")
                         correct_values = False
+                        
+
+            # for token in tokens:
+            #     if token[0]:  # Check if the first capturing group is not empty (string within double quotes)
+            #         string_value = token[0]
+            #         to_concat.append(string_value)
+            #     else:
+            #         value = token[1]
+            #         if value in {'WIN', 'FAIL'}:
+            #             to_concat.append(value)
+            #         else:
+            #             try:
+            #                 number_value = int(value)
+            #                 to_concat.append(number_value)
+            #             except ValueError:
+            #                 try:
+            #                     float_value = float(value)
+            #                     to_concat.append(float_value)
+            #                 except ValueError:
+            #                     # other_list.append(value)
+            #                     #check if the variables are declared
+            #                     if value in variables:
+            #                         var_value = str(variables[value]['value'])
+            #                         to_concat.append(var_value)
+            #                     else:
+            #                         print(f"Error in line {line_number}: Variable '{value}' is not yet declared.")
+            #                         correct_values = False
+            #                         exit(0)
                                     
             if correct_values == True:
                 concatenated = ''.join([str(s).strip('"') for s in to_concat])
@@ -988,17 +1025,20 @@ def analyze(line, classification, line_number, all_tokens, self):
                             variables['IT']['data type'] = 'TROOF'
                         
                     else:
-                        print(variable_type)
-                        print(f"Error in line {line_number}: Typecast error.")
-                        exit(0)
+                        #print(variable_type)
+                        error_prompt(line_number, "Typecast error.", self)
+                        #print(f"Error in line {line_number}: Typecast error.")
+                        #exit(0)
 
             else:
-                print(f"Error in line {line_number}: Variable does not exist.")
-                exit(0)
+                error_prompt(line_number, "Variable does not exist.", self)
+                #print(f"Error in line {line_number}: Variable does not exist.")
+                #exit(0)
                 
         else:
-            print(f"Error in line {line_number}: ssTypecast error.")
-            exit(0)
+            error_prompt(line_number, "Typecast error.", self)
+            #print(f"Error in line {line_number}: ssTypecast error.")
+            #exit(0)
     
     elif classification == "Reassignment Operator":
         #make a regex for reassignment operator for lolcode 
@@ -1217,10 +1257,10 @@ def if_else_statement(content, lines, self):
             b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], self)
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
-                console_dislay(b, self)
+                #console_dislay(b, self)
         elif if_else_condition[inner_condition_index][1][0][1] == 'Function Call keyword':
             # print(f'{content[if_else_condition_newformat[inner_condition_index][0]-1]}\n{if_else_condition_newformat[inner_condition_index]}')
-            function_analyzer(content[if_else_condition_newformat[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index])
+            function_analyzer(content[if_else_condition_newformat[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index], self)
         else:
             if if_else_condition[inner_condition_index][1][0][1] == 'Identifier':
             
@@ -1303,7 +1343,7 @@ def loop_analyzer(self):
                                 
                                 if b is not None:
                                     # print(loop_code_line[1:])
-                                    console_dislay(b, self)
+                                    #console_dislay(b, self)
                                     print("THISSSSS",loop_code_line[0],": ", b)
                             if classification == "Arithmetic Operator" or classification == "Boolean Operator" or classification == "Comparison Operator":
                                 b = arithmetic_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter], self)
@@ -1342,12 +1382,16 @@ def loop_analyzer(self):
 
                 else:
                     error_prompt(loop_tokens[0][0], f"Variable '{loop_variable}' is not of type NUMBR.", self)
+                    print(f"Error in line {loop_tokens[0][0]}: Variable '{loop_variable}' is not of type NUMBR.")
             else:
-                error_prompt(loop_tokens[0][0], f"Variable '{loop_variable}' is not declared.", self)
+                error_prompt(loop_tokens[0][0], f"Variable '{loop_variable}' is not yet declared.", self)
+                print(f"Error in lineeeeee {loop_tokens[0][0]}: Variable '{loop_variable}' is not yet declared.")
         else:
             error_prompt(loop_tokens[len(loop_tokens)-1][0], f"Label '{loop_variable_end}' does not match loop label '{loop_label}'.", self)
+            print(f"Error in line {loop_tokens[len(loop_tokens)-1][0]}: Label '{loop_variable_end}' does not match loop label '{loop_label}'.")
     else:
         error_prompt(loop_tokens[0][0], "Incorrect format for loops.", self)
+        print(f"Error in line {loop_tokens[0][0]}: Incorrect format for loops.")
 
     #Reset the necessary variables
     loop_lines = []
@@ -1381,8 +1425,8 @@ def function_checker(self):
             #check for duplicate parameter names
             for params in function_parameters:
                 if params in check_parameters:
-                    # print(f"Error in line {function_tokens[0][0]}: Parameter '{params}' already used.")
                     error_prompt(function_tokens[0][0], f"Parameter '{params}' already used.", self)
+                    print(f"Error in line {function_tokens[0][0]}: Parameter '{params}' already used.")
                 else:
                     check_parameters.append(params)
             
@@ -1404,10 +1448,13 @@ def function_checker(self):
                 # print("\n", functions)
             else:
                 error_prompt(function_tokens[0][0], f"Function '{function_name}' already exists.", self)
+                print(f"Error in line {function_tokens[0][0]}: Function '{function_name}' already exists.")
         else:
             error_prompt(function_tokens[len(function_tokens)-1][0], "Incorrect syntax for function delimeter.", self)
+            print(f"Error in line {function_tokens[len(function_tokens)-1][0]}: Incorrect syntax for function delimeter.")
     else:
         error_prompt(function_tokens[0][0], "Incorrect format for functions.", self)
+        print(f"Error in line {function_tokens[0][0]}: Incorrect format for functions.")
     
     #reset the the lists
     function_lines = []
@@ -1656,11 +1703,14 @@ def function_analyzer(line, tokens, self):
                     
                     line_counter+=1        
             else:
-                error_prompt(function_line_number, "Number of parameters do not match.", self)
+                error_prompt(function_line_number, f"Error in line {function_line_number}: Number of parameters do not match.")
+                print(f"Error in line {function_line_number}: Number of parameters do not match.")
         else:
-            error_prompt(function_line_number, f"Function '{function_name}' not declared.", self)
+            error_prompt(function_line_number, f"Error in line {function_line_number}: Function '{function_name}' not yet declared.")
+            print(f"Error in line {function_line_number}: Functionnnnnnnnnnn '{function_name}' not yet declared.")
     else:
-        error_prompt(function_line_number, "Incorrect format for function call.", self)
+        error_prompt(function_line_number, f"Error in line {function_line_number}: Incorrect format for function call.")
+        print(f"Error in line {function_line_number}: Incorrect format for function call.")
     
     if has_return == True:
         #no error
@@ -1679,7 +1729,10 @@ def function_analyzer(line, tokens, self):
                 temp_variables['IT']['data type'] = return_value_type
     
     #reset the variables back
+    #function_var.update(function_parameters)
+    print(f"temp_variables: {function_parameters}")
     variables = temp_variables
+    
     
     return return_value
 
@@ -1725,8 +1778,56 @@ def switch_case_analyzer(content, lines, self):
                 execute_code_block(case_index, content, switch_case_condition_newformat, lines)
                 return
         else:
+
+            temp = switch_case_condition[1][1][1][0]
+        
+        # print(type(temp))
+        switch_case_condition_newformat = [[item[0]] + item[1] if len(item) > 1 else [item[0]] for item in switch_case_condition]
+
+        if temp == variables['IT']['value']:
+
+            # print("check switch here",switch_case_condition[1][1][1][0], variables['IT']['value'])
+            # if switch_case_condition[2][1][0][1] == "Arithmetic Operator" or  switch_case_condition[2][1][0][1] == "Boolean Operator":
+            #     pass
+            for i in range(2, len(switch_case_condition)):
+                
+                # print(switch_case_condition[i][1][0][1])
+                if switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter" or switch_case_condition[i][1][0][1] == "Default Case Keyword":
+                    break
+                else:
+                    # print(i)
+                    if switch_case_condition[i][1][0][1] == "Break Keyword":
+                        break
+                    elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
+                        # print(f'yooo {switch_case_condition[i][0]}')
+                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
+                        
+                        # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
+                        if b is not None:
+                            print("line",switch_case_condition[i][0],": ", b)
+                        # print("hereee", b)
+                    elif switch_case_condition[i][1][0][1] == "Output Keyword":
+                        # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+
+                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], self)
+                        if b is not None:
+                            print("line",switch_case_condition[i][0],": ", b)
+                    elif switch_case_condition[i][1][0][1] == "Function Call keyword":
+                        # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+                        function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i])
+                    else:
+                        removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
+                        # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
+                        # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
+                        if switch_case_condition[i][1][0][1] == 'Identifier':
+                            analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+                        else:
+                            analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+                        # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
+
             print(f"Error in line {switch_case_condition[case_index+1][0]}: Invalid value format for OMG. Value must only be a yarn, troof, numbr, or numbar.")
             exit(0)
+
 
     execute_default_case()
 
@@ -1780,6 +1881,7 @@ def execute_line(i, content, lines, switch_case_condition, switch_case_condition
             analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:])
         else:
             analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:])
+
 
 #TOKENIZE INPUTTED CODE
 def tokenize(content, self):
@@ -2090,7 +2192,7 @@ def tokenize(content, self):
                         b = print_analyzer(removed_tuple, tokens[0], self)
                         if b is not None:
                             print("line",tokens[0],": ", b)
-                            console_dislay(b, self)
+                            #console_dislay(b, self)
                     # this is a condition when if keyword is found but no if delimiter  
                     elif tokens[1][1] == "If Keyword":
                         if_keyword = True
@@ -2134,12 +2236,17 @@ def tokenize(content, self):
                         else:
                             analyze(removed_comment, tokens[1][1], tokens[0], tokens[1:], self)
 
+            if is_error == True:
+                break
+            
+            app.symbol_table.update(variables)
+            app.symbol_table.add_function_variables(function_var)
             line_number += 1
             all_tokens.append(tokens)
     return all_tokens
 
 def reset_flags():
-    global obtw, wazzup, hai, multi_line, obtw_line, comments, comments_next, inside_wazzup_buhbye, if_delimiter, oic_found, if_keyword, else_keyword, wazzup_line, variables, functions, if_else_condition, condition_index, loop_lines, loop_tokens, is_loop, is_var_assignment, function_lines, function_tokens, is_function, switch_delimiter, switch_case_condition, temp, default_case_index, case_keyword, default_case_keyword
+    global app, is_error, function_var, obtw, wazzup, hai, multi_line, obtw_line, comments, comments_next, inside_wazzup_buhbye, if_delimiter, oic_found, if_keyword, else_keyword, wazzup_line, variables, functions, if_else_condition, condition_index, loop_lines, loop_tokens, is_loop, is_var_assignment, function_lines, function_tokens, is_function, switch_delimiter, switch_case_condition, temp, default_case_index, case_keyword, default_case_keyword
     global is_loop_del, is_function_del
     # flags
     obtw = False
@@ -2165,11 +2272,14 @@ def reset_flags():
     loop_tokens = []
     is_loop = False
     is_var_assignment = False
+    app = app
+    is_error = False
 
     #for function
     function_lines =  []
     function_tokens = []
     is_function = False
+    function_var = {"FUNCTION VARIABLES": {'value': None, 'data type': None}}
 
     #for switch case
     switch_delimiter = False
@@ -2314,16 +2424,22 @@ class SymbolTable(tk.Frame):
             value = info_dict.get('value', '')  # Get the value from the 'value' key or use an empty string if not present
             self.treeview.insert("", idx, values=(identifier, value))
 
+    def add_function_variables(self, symbol_dict):
+        for idx, (identifier, info_dict) in enumerate(symbol_dict.items(), start=1):
+            value = info_dict.get('value', '')
+            self.treeview.insert("", idx, values=(identifier, value))
+
 class Console(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.grid(row=2, column=0, columnspan=3, sticky="nsew")
+        self.execute_button = tk.Button(self, text="Execute", command=self.execute_code)
+        self.execute_button.pack()
         self.label = tk.Label(self, text="Console")
         self.label.pack()
         self.text_widget = tk.Text(self, wrap="word", state="normal")
         self.text_widget.pack(fill="both", expand=True)
-        self.execute_button = tk.Button(self, text="Execute", command=self.execute_code)
-        self.execute_button.pack()
+        
 
     def execute_code(self):
         self.text_widget.delete("1.0", tk.END)
@@ -2333,15 +2449,16 @@ class Console(tk.Frame):
         #print(f"Executing code:\n{code}")
         contents = code.splitlines()
         reset_flags()
-        print("code:")
-        print(code)
+        #print("code:")
+        #print(code)
         """ print("Tokens:")
         print(self.tokens) """
         app.tokens = tokenize(contents, app)
 
         # Update LexemeTable with the new tokens
         app.lexeme_table.populate(app.tokens)
-        app.symbol_table.populate(variables)
+        #app.symbol_table.populate(variables)
+        #app.symbol_table.populate(variables)
         #self.print_to_console(f"Executing code:\n{code}")
 
     def print_to_console(self, message):
@@ -2378,26 +2495,23 @@ class Application(tk.Tk):
         self.console = Console(self)
 
     def load_file(self):
+        
+
         file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.lol"), ("All files", "*.*")])
         contents = []
         if file_path:
             with open(file_path, "r") as file:
                 for lines in file:
                     contents.append(lines.replace("\n", ""))
+        
 
         self.code_editor.text_widget.delete("1.0", tk.END)
         self.code_editor.text_widget.insert(tk.END, "\n".join(contents))
-        self.tokens = tokenize(contents, self)
-        # print("Contents:")
-        # print(contents)
-        # print("\n\nTokens:")
-        
-        # for i in self.tokens:
-        #     print(i)
+        #self.tokens = tokenize(contents, self)
         
         # Update LexemeTable with the new tokens
-        self.lexeme_table.populate(self.tokens)
-        self.symbol_table.populate(variables)
+        #self.lexeme_table.populate(self.tokens)
+        #self.symbol_table.populate(variables)
 
 if __name__ == "__main__":
     app = Application()
