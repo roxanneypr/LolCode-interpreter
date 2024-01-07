@@ -122,11 +122,20 @@ kthxbye_pattern = re.compile(r'^\s*KTHXBYE\s*$')
 # check this
 smoosh_pattern = re.compile(r'^SMOOSH\s+(\S+(\s+AN\s+(\S+|"([^"]*)"))*)\s*$')
 smoosh_pattern_forfunc = r'SMOOSH\s+(\S+(\s+AN\s+(\S+|"([^"]*)"))*)\s*'
-arithmetic_pattern = r'(SUM OF|DIFF OF|PRODUKT OF|QUOSHUNT OF|MOD OF|BIGGR OF|SMALLR OF|BOTH OF|EITHER OF|WON OF|BOTH SAEM|DIFFRINT) ([a-zA-Z][a-zA-Z0-9_]*|[0-9]*\.?[0-9]+) (AN) ([a-zA-Z][a-zA-Z0-9_]*|[0-9]*\.?[0-9]+)'
-boolean_operation = r'(NOT|BOTH OF|EITHER OF|WON OF) ([a-zA-Z][a-zA-Z0-9_]*|[0-9]*\.?[0-9]+) (AN [a-zA-Z][a-zA-Z0-9_]*|[0-9]*\.?[0-9]+)'
+#arithmetic_pattern = r'(SUM OF|DIFF OF|PRODUKT OF|QUOSHUNT OF|MOD OF|BIGGR OF|SMALLR OF|BOTH OF|EITHER OF|WON OF|BOTH SAEM|DIFFRINT) ([a-zA-Z][a-zA-Z0-9_]*|[0-9]*\.?[0-9]+) (AN) ([a-zA-Z][a-zA-Z0-9_]*|[0-9]*\.?[0-9]+)'
+#boolean_operation = r'(NOT|BOTH OF|EITHER OF|WON OF) ([a-zA-Z][a-zA-Z0-9_]*|[0-9]*\.?[0-9]+) (AN [a-zA-Z][a-zA-Z0-9_]*|[0-9]*\.?[0-9]+)'
 # literal_pattern = r'([0-9]+|[0-9]+\.[0-9]+|".*"|WIN|FAIL)'
-literal_pattern = r'([0-9]+|[0-9]+\.[0-9]+|"[^"]*"|WIN|FAIL)'
-comparison_pattern = r'(BOTH SAEM|DIFFRINT) (.+?) AN (.+)'
+literal_pattern = r'(-?[0-9]+|[0-9]+\.[0-9]+|"[^"]*"|WIN|FAIL)'
+#comparison_pattern = r'(BOTH SAEM|DIFFRINT) (.+?) AN (.+)'
+
+#====================== FOR EXPRESSIONS ============================
+arithmetic_pattern = r'(SUM OF|DIFF OF|PRODUKT OF|QUOSHUNT OF|MOD OF|BIGGR OF|SMALLR OF|BOTH OF|EITHER OF|WON OF|BOTH SAEM|DIFFRINT) ([a-zA-Z][a-zA-Z0-9_]*|-?[0-9]*\.?[0-9]+) (AN) ([a-zA-Z][a-zA-Z0-9_]*|-?[0-9]*\.?[0-9]+)'
+boolean_operation = r'(NOT) ([a-zA-Z][a-zA-Z0-9_]*|-?[0-9]*\.?[0-9]+)'
+comparison_pattern = r'(ALL OF|ANY OF) (.+?)(?: AN (.+?))* MKAY$'
+
+#printing_pattern = r'^VISIBLE (.+)$'
+#printing_pattern = re.compile(r'^VISIBLE (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + ')')
+
 
 variable_pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*$'
 variable_pattern_forfunc = r'[a-zA-Z_][a-zA-Z0-9_]*'
@@ -134,6 +143,10 @@ integer_pattern = r'^[+-]?\d+$'
 float_pattern = r'^[+-]?\d+(\.\d+)?$'
 boolean_pattern = r'^(WIN|FAIL)$'
 yarn_pattern = r'".*"'
+#variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( ITZ (' + binary_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + urinary_pattern + '|' + infinite_pattern + '))?\s*( BTW .*)?$') 
+operand_pattern = r'(' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern + ')'
+printing_pattern = re.compile(r'^VISIBLE (' + operand_pattern + ')(?: (\+) (' + operand_pattern + '))*$')
+#printing_pattern = re.compile(r'^VISIBLE (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern + ') (?:(\+) (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern +'))*$')
 variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( ITZ (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$') 
 typecast_pattern = re.compile(r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)( A (' + '|'.join(type_literal_syntax[:-1]) + ')| ' + type_literal_syntax[-1] + ')\s*( BTW .*)?\s*$')
 reassignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)\s*((IS NOW A)\s*(' + '|'.join(type_literal_syntax) + ')|(R MAEK)\s*([a-zA-Z]+[a-zA-Z0-9_]*)\s*(' + '|'.join(type_literal_syntax) + '))\s*(BTW .*)?$')       
@@ -204,7 +217,7 @@ is_error = False
 function_lines =  []
 function_tokens = []
 is_function = False
-function_var = {"FUNCTION VARIABLES": {'value': " ", 'data type': " "}}
+function_var = {"FUNCTION VARIABLES": {'value': " ====== ", 'data type': " "}}
 is_function_del = False
 
 #for switch case
@@ -356,6 +369,8 @@ def comparison(line_number, stack, operation, self):
     return stack
 
 def arithmetic_analyzer(line, line_number, untokenized_line, self):
+    #print(f"line: {line}")
+    #print(f"untokenized_line: {untokenized_line}")
     global inside_wazzup_buhbye, wazzup_line, if_keyword, else_keyword, case_keyword, default_case_keyword
 
     
@@ -483,6 +498,12 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
                         stack.append(False)
                 else:
                     stack.append(variables[word[0]]['value'])
+            elif variables[word[0]]['data type'] == 'YARN Literal':
+                if is_integer(num):
+                    stack.append(int(num))
+                elif is_float(num):
+                    stack.append(float(num))
+                stack.append(variables[word[0]]['value'])
         else:
             #print(f'num: {word[0]}')
             # Check if the element is a string and if it's a float or int
@@ -541,23 +562,33 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
 
     if is_var_assignment == False:
         if stack[0] is not None:
-            if stack[0] == True:
+            if stack[0] is True:
                 variables['IT'] = {'value': "WIN", 'data type': "TROOF"}
-            elif stack[0] == False:
+            elif stack[0] is False:
                 variables['IT'] = {'value': "FAIL", 'data type': "TROOF"}
             else:
                 variables['IT'] = {'value': stack[0], 'data type': datatypes[type(stack[0]).__name__]}
     else:
         is_var_assignment = False
     
-    if stack[0] == True:
+    #print(stack)
+    
+    if stack[0] is True:
         return "WIN"
-    elif stack[0] == False:
+    elif stack[0] is False:
         return "FAIL"
     else:
         return stack[0]
 
-def print_analyzer(line, line_number, self):
+def print_analyzer(line, line_number, untokenized, self):
+    global printing_pattern
+    print(untokenized)
+    match = printing_pattern.match(untokenized)
+    if not match:
+        print("here")
+        error_prompt(line_number, "Printing syntax error.", self)
+        
+
     global is_var_assignment
     isStart = True
     hasOperand = True
@@ -573,14 +604,14 @@ def print_analyzer(line, line_number, self):
     # this is to ensure that the wazzup and buhbye block only contains variable declaration 
     # also, this checks whether the wazzup has corresponding buhbye, and vice versa
     if inside_wazzup_buhbye == True:
-        match = variable_declaration_pattern.match(line)
-        match_code_delim = kthxbye_pattern.match(line)
-        if 'BUHBYE' in line:
+        match = variable_declaration_pattern.match(untokenized)
+        match_code_delim = kthxbye_pattern.match(untokenized)
+        if 'BUHBYE' in untokenized:
             if inside_wazzup_buhbye == False:
                 error_prompt(line_number, "No matching WAZZUP declaration.", self)
                 #print(f"Error in line {line_number}: No matching WAZZUP declaration.")
                 #exit(0)
-            if not buhbye_pattern.match(line):
+            if not buhbye_pattern.match(untokenized):
                 error_prompt(line_number, "BUHBYE should be alone on its line.", self)
                 #print(f"Error in line {line_number}: BUHBYE should be alone on its line.")
                 #exit(0)
@@ -653,11 +684,11 @@ def print_analyzer(line, line_number, self):
                 toprint += str(new_value)
             else:
                 try:
-                    print(op)
+                    #print(op)
                     new_value = analyze(expression[:-1], op[0][1], line_number, op, self)
                     toprint += str(variables['IT']['value'])
                 except:
-                    print("here")
+                    #print("here")
                     error_prompt(line_number, "Print expression error.", self)
 
     console_dislay(toprint, self)
@@ -807,8 +838,9 @@ def analyze(line, classification, line_number, all_tokens, self):
         if input_match:
             input_analyzer(all_tokens, line_number, line, self)
         else:
-            print(f"Error in line {line_number}: Incorrect format for input.")
-            exit(0)
+            error_prompt(line_number, "Incorrect format for input.", self)
+            #print(f"Error in line {line_number}: Incorrect format for input.")
+            #exit(0)
             
 # ======================================CONCATENATION======================================
     #check for concatenation
@@ -836,7 +868,7 @@ def analyze(line, classification, line_number, all_tokens, self):
                         to_concat.append(var_value)
                     else:
                         error_prompt(line_number, f"Variable '{token}' is not yet declared.", self)
-                        print(f"Error in line {line_number}: Variable '{token}' is not yet declared.")
+                        #print(f"Error in line {line_number}: Variable '{token}' is not yet declared.")
                         correct_values = False
                         
 
@@ -1254,7 +1286,7 @@ def if_else_statement(content, lines, self):
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
         elif if_else_condition[inner_condition_index][1][0][1] == 'Output Keyword':
-            b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], self)
+            b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines, self)
             if b is not None:
                 print("line",if_else_condition[inner_condition_index][0],": ", b)
                 #console_dislay(b, self)
@@ -1339,7 +1371,7 @@ def loop_analyzer(self):
                                 break            
                                         
                             if classification == "Output Keyword":
-                                b = print_analyzer(loop_code_line[1:][0], loop_code_line[0], self)
+                                b = print_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter], self)
                                 
                                 if b is not None:
                                     # print(loop_code_line[1:])
@@ -1677,7 +1709,7 @@ def function_analyzer(line, tokens, self):
                     if not is_loop:
                         # =============== PRINTING ===============
                         if keyword == "Output Keyword":
-                            to_print = print_analyzer(code_tuples, code_line_number, self)
+                            to_print = print_analyzer(code_tuples, code_line_number, code_line, self)
                             if to_print is not None:
                                 print("THISSSSS", code_line_number,": ", to_print)
                                 
@@ -1775,7 +1807,7 @@ def switch_case_analyzer(content, lines, self):
                 temp = switch_case_condition[case_index+1][1][1][0]
 
             if temp == variables['IT']['value']:
-                execute_code_block(case_index, content, switch_case_condition_newformat, lines)
+                execute_code_block(case_index, content, switch_case_condition_newformat, lines, self)
                 return
         else:
 
@@ -1809,7 +1841,7 @@ def switch_case_analyzer(content, lines, self):
                     elif switch_case_condition[i][1][0][1] == "Output Keyword":
                         # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
 
-                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], self)
+                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
                         if b is not None:
                             print("line",switch_case_condition[i][0],": ", b)
                     elif switch_case_condition[i][1][0][1] == "Function Call keyword":
@@ -1831,7 +1863,7 @@ def switch_case_analyzer(content, lines, self):
 
     execute_default_case()
 
-def execute_code_block(case_index, content, switch_case_condition_newformat, lines):
+def execute_code_block(case_index, content, switch_case_condition_newformat, lines, self):
     i = case_index + 1
     while i < len(switch_case_condition):
         if switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter" or switch_case_condition[i][1][0][1] == "Default Case Keyword":
@@ -1840,11 +1872,11 @@ def execute_code_block(case_index, content, switch_case_condition_newformat, lin
             if switch_case_condition[i][1][0][1] == "Break Keyword":
                 break
             elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
-                b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines)
+                b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
                 if b is not None:
                     print("line",switch_case_condition[i][0],": ", b)
             elif switch_case_condition[i][1][0][1] == "Output Keyword":
-                b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0])
+                b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
                 if b is not None:
                     print("line",switch_case_condition[i][0],": ", b)
             elif switch_case_condition[i][1][0][1] == "Function Call keyword":
@@ -1863,24 +1895,24 @@ def execute_default_case():
     while i < len(switch_case_condition):
         if switch_case_condition[i][1][0][1] == "If-Else or Switch-Case Delimiter":
             break
-        execute_line(i)
+        #execute_line(i)
         i += 1
 
-def execute_line(i, content, lines, switch_case_condition, switch_case_condition_newformat):
+def execute_line(i, content, lines, switch_case_condition, switch_case_condition_newformat, self):
     if switch_case_condition[i][1][0][1] == "Break Keyword":
         return 'break'
     elif switch_case_condition[i][1][0][1] in ["Arithmetic Operator", "Boolean Operator", "Comparison Operator"]:
-        return arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines)
+        return arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
     elif switch_case_condition[i][1][0][1] == "Output Keyword":
-        return print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0])
+        return print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
     elif switch_case_condition[i][1][0][1] == "Function Call keyword":
-        function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i])
+        function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i], self)
     else:
         removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
         if switch_case_condition[i][1][0][1] == 'Identifier':
-            analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:])
+            analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
         else:
-            analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:])
+            analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
 
 
 #TOKENIZE INPUTTED CODE
@@ -2189,7 +2221,7 @@ def tokenize(content, self):
                         if b is not None:
                             print("line",tokens[0],": ", b)
                     elif tokens[1][1] == "Output Keyword":
-                        b = print_analyzer(removed_tuple, tokens[0], self)
+                        b = print_analyzer(removed_tuple, tokens[0], lines, self)
                         if b is not None:
                             print("line",tokens[0],": ", b)
                             #console_dislay(b, self)
@@ -2240,9 +2272,11 @@ def tokenize(content, self):
                 break
             
             app.symbol_table.update(variables)
+            #print(f"VARIABLES: {variables}")
             #app.symbol_table.add_function_variables(function_var)
             line_number += 1
             all_tokens.append(tokens)
+    #app.symbol_table.add_function_variables(function_var)
     return all_tokens
 
 def reset_flags():
@@ -2279,7 +2313,7 @@ def reset_flags():
     function_lines =  []
     function_tokens = []
     is_function = False
-    function_var = {"FUNCTION VARIABLES": {'value': None, 'data type': None}}
+    function_var = {"FUNCTION VARIABLES": {'value': " ", 'data type': ""}}
 
     #for switch case
     switch_delimiter = False
@@ -2423,11 +2457,16 @@ class SymbolTable(tk.Frame):
         for idx, (identifier, info_dict) in enumerate(symbol_dict.items(), start=1):
             value = info_dict.get('value', '')  # Get the value from the 'value' key or use an empty string if not present
             self.treeview.insert("", idx, values=(identifier, value))
+        
+        #self.treeview.insert("", 'end', values=("LOL", "value"))
 
     def add_function_variables(self, symbol_dict):
+        print(symbol_dict)
         for idx, (identifier, info_dict) in enumerate(symbol_dict.items(), start=1):
             value = info_dict.get('value', '')
-            self.treeview.insert("", idx, values=(identifier, value))
+            self.treeview.insert("", 'end', values=(identifier, value))
+        
+        #self.treeview.insert("", idx, values=("LOL", "value"))
 
 class Console(tk.Frame):
     def __init__(self, master=None):
@@ -2458,6 +2497,7 @@ class Console(tk.Frame):
         # Update LexemeTable with the new tokens
         app.lexeme_table.populate(app.tokens)
         app.symbol_table.add_function_variables(function_var)
+        #app.symbol_table.add_function_variables(function_var)
         #app.symbol_table.populate(variables)
         #app.symbol_table.populate(variables)
         #self.print_to_console(f"Executing code:\n{code}")
