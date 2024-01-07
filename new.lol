@@ -55,6 +55,8 @@ HOW IZ I sample_function YR thea AN YR yanna AN YR mark BTW function with 0 argu
 SMOOSH str1 AN str2
 IF U SAY SO
 
+str R  
+
 I IZ sample_function YR str1 AN YR 123 AN YR WIN MKAY
 
 IM IN YR print10 UPPIN YR temp TIL BOTH SAEM temp AN 10 BTW HAHHAA

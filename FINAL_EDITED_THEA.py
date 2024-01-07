@@ -134,6 +134,7 @@ integer_pattern = r'^[+-]?\d+$'
 float_pattern = r'^[+-]?\d+(\.\d+)?$'
 boolean_pattern = r'^(WIN|FAIL)$'
 yarn_pattern = r'".*"'
+typecast_pattern_forfunc = r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)( A (' + '|'.join(type_literal_syntax[:-1]) + ')| ' + type_literal_syntax[-1] + ')\s*( BTW .*)?\s*$'
 variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( ITZ (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$') 
 typecast_pattern = re.compile(r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)( A (' + '|'.join(type_literal_syntax[:-1]) + ')| ' + type_literal_syntax[-1] + ')\s*( BTW .*)?\s*$')
 reassignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)\s*((IS NOW A)\s*(' + '|'.join(type_literal_syntax) + ')|(R MAEK)\s*([a-zA-Z]+[a-zA-Z0-9_]*)\s*(' + '|'.join(type_literal_syntax) + '))\s*(BTW .*)?$')       
@@ -163,7 +164,8 @@ combined_pattern_str = (
     smoosh_pattern_forfunc + '|' +
     boolean_pattern + '|' +
     literal_pattern + '|' +
-    variable_pattern_forfunc
+    variable_pattern_forfunc +  '|' +
+    typecast_pattern_forfunc
     )
 # Potential keywords array
 potential_keyword = ["I", "I HAS", "SUM", "DIFF", "PRODUKT", "QUOSHUNT", "MOD"
@@ -1440,9 +1442,10 @@ def function_analyzer(line, tokens, self):
     return_value = None
     has_return = False
     function_call_match = function_call_pattern.match(line)
-
+    print("MAAAAATCHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH?")
     #check if syntax is correct
     if function_call_match:
+        print("MAAAAATCHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
         #extract from match
         function_name = function_call_match.group(1)
 
@@ -1477,6 +1480,7 @@ def function_analyzer(line, tokens, self):
                         else:
                             temp.append(tokens[k][0])
         
+        print("EXPRESSIONNNNNNN: ", param_expressions)
         function_parameters = {}
         
         #check if function exists
@@ -1535,6 +1539,7 @@ def function_analyzer(line, tokens, self):
                             else:
                                 if new_classification == 'Identifier':
                                     # IEEDIT TO
+                                    print("PUMASOK BAAAAAAAAAAAAAAAAAAAAA?")
                                     new_value = analyze(expression, new_classification, tokens[0], expression_tokens_final, self)
                                 else:
                                     new_value = analyze(expression, new_classification, tokens[0], expression_tokens_final, self)
@@ -1677,6 +1682,8 @@ def function_analyzer(line, tokens, self):
             else:
                 temp_variables['IT']['value'] = return_value
                 temp_variables['IT']['data type'] = return_value_type
+        
+        # print()
     
     #reset the variables back
     variables = temp_variables
