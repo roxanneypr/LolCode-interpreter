@@ -442,8 +442,18 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
 
     counter = 0
     print(f"REVLINE ====== {revline}")
+
+    # CHECK IF THERE IS NESTED INFINITE ARITY OPERATOR
+    anyof = ('ANY OF', 'Infinite Arity Operator')
+    allof = ('ALL OF', 'Infinite Arity Operator')
+
+    count = revline.count(anyof) + revline.count(allof)
+
+    if count > 1:
+        error_prompt(line_number, "Boolean expression error.", self)
+
+
     for word in revline:
-        print(f"word: {word}")
 
         counter += 1
         # ======================== CHECK SYNTAX
