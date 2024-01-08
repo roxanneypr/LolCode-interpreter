@@ -29,13 +29,11 @@ python lol_code_interpreter.py
 
 This will launch the LOL Code Interpreter GUI. From there, you can open LOL Code files, edit the code, and execute it using the provided controls.
 
-Make sure to replace "yourusername" with your actual GitHub username and adjust other details based on your project's structure.
-
 ## Using the GUI
 
 Once the GUI is open, you can:
 
-- **Open a LOL Code File:** Click on the "Open" button to select a LOL Code file using the file dialog.
+- **Open a LOL Code File:** Click on the "Select File" button to select a LOL Code file using the file dialog.
 
 - **Edit Code:** Directly edit the LOL Code in the text editor.
 
@@ -46,5 +44,3 @@ Once the GUI is open, you can:
 - Ensure your LOL Code file has the ".lol" extension.
 
 - The interpreter uses a simple GUI with a text editor for code input.
-
-Feel free to contribute and have fun with LOL Code!
