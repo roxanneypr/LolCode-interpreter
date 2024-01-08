@@ -741,6 +741,7 @@ def check_comment_errors(line, line_number, self):
     
     return comment_error
 
+# original
 expression = {"Variable Declaration", "Variable Assignment", "Identifier"}
 
 def get_data_type(variable_to_analyze):
@@ -879,10 +880,20 @@ def analyze(line, classification, line_number, all_tokens, self):
                         elif re.match(boolean_pattern, initial_value):
                             variables[variable_name] = {'value': initial_value.strip(), 'data type': 'TROOF'}
                         elif re.match(arithmetic_pattern, initial_value) or re.match(boolean_operation, initial_value) or re.match(comparison_pattern, initial_value):
-                                # print("DETECTED")
+                                print("DETECTED")
                                 global is_var_assignment
                                 is_var_assignment = True
-                                filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
+                                # print(all_tokens)
+                                # filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
+                                
+                                # print(expression)
+
+                                index = all_tokens.index(('ITZ', 'Variable Assignment'))
+
+                                # Slice the list from that index onwards
+                                filtered_tokens = all_tokens[index+1:]
+
+                                print("(**(*(*)))",filtered_tokens)
                                 new_value = arithmetic_analyzer(filtered_tokens, line_number, line, self)
                                 # print("new value", new_value)
                                 if re.match(integer_pattern, str(new_value)):
