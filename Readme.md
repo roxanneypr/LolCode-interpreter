@@ -23,7 +23,7 @@ pip install tk
 
 To execute the LOL Code Interpreter you can run the following: 
 
-    ```bash
+    ```
     python lol_code_interpreter.py
     ```
 
