@@ -144,7 +144,7 @@ float_pattern = r'^[+-]?\d+(\.\d+)?$'
 boolean_pattern = r'^(WIN|FAIL)$'
 yarn_pattern = r'".*"'
 #variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( ITZ (' + binary_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + urinary_pattern + '|' + infinite_pattern + '))?\s*( BTW .*)?$') 
-operand_pattern = r'(' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern + ')'
+operand_pattern = r'(' + variable_pattern + '|' + literal_pattern + '|' + arithmetic_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern + ')'
 printing_pattern = re.compile(r'^VISIBLE (' + operand_pattern + ')(?: (\+) (' + operand_pattern + '))*$')
 #printing_pattern = re.compile(r'^VISIBLE (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern + ') (?:(\+) (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern +'))*$')
 variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( ITZ (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$') 
@@ -260,6 +260,8 @@ def error_prompt(line_number, error_message, self):
     is_error = True
 
 def arithmetic(line_number, stack, operation, self):
+    print(stack)
+    print(operation)
     operations_dict = {
         "SUM OF": "+",
         "DIFF OF": "-",
@@ -369,8 +371,9 @@ def comparison(line_number, stack, operation, self):
     return stack
 
 def arithmetic_analyzer(line, line_number, untokenized_line, self):
-    #print(f"line: {line}")
-    #print(f"untokenized_line: {untokenized_line}")
+
+    print(f"line: {line}")
+    print(f"untokenized_line: {untokenized_line}")
     global inside_wazzup_buhbye, wazzup_line, if_keyword, else_keyword, case_keyword, default_case_keyword
 
     
@@ -480,8 +483,9 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
         
         # IF OPERAND, ADD TO STACK
         elif word[0] in variables:
-            operand = stack.append(variables[word[0]]['value'])
-            if variables[word[0]]['data type'] == 'NUMBR Literal' or variables[word[0]]['data type'] == 'NUMBAR Literal' or variables[word[0]]['data type'] == 'TROOF Literal':
+            print(variables)
+            #operand = stack.append(variables[word[0]]['value'])
+            if variables[word[0]]['data type'] == 'NUMBR' or variables[word[0]]['data type'] == 'NUMBAR' or variables[word[0]]['data type'] == 'TROOF':
                 if variables[word[0]]['data type'] == 'TROOF Literal':
                     if variables[word[0]]['value'] == 'WIN':
                         stack.append(True)
@@ -489,12 +493,13 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
                         stack.append(False)
                 else:
                     stack.append(variables[word[0]]['value'])
-            elif variables[word[0]]['data type'] == 'YARN Literal':
+            elif variables[word[0]]['data type'] == 'YARN':
+                num = variables[word[0]]['value']
                 if is_integer(num):
                     stack.append(int(num))
                 elif is_float(num):
                     stack.append(float(num))
-                stack.append(variables[word[0]]['value'])
+                #stack.append(variables[word[0]]['value'])
         else:
             #print(f'num: {word[0]}')
             # Check if the element is a string and if it's a float or int
@@ -572,12 +577,15 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
         return stack[0]
 
 def print_analyzer(line, line_number, untokenized, self):
-    global printing_pattern
-    print(untokenized)
+    global printing_pattern, operand_pattern
+    """ print(untokenized)
+    print(printing_pattern)
+    print(operand_pattern)
     match = printing_pattern.match(untokenized)
     if not match:
         print("here")
         # error_prompt(line_number, "Printing syntax error.", self)
+        error_prompt(line_number, "Printing syntax error.", self) """
         
 
     global is_var_assignment
@@ -679,7 +687,7 @@ def input_analyzer(line, line_number, untokenized_line, self):
                 #user_input = input()
                 variables[line[1][0]]['value'] = str(dialog_input)
                 variables[line[1][0]]['data type'] = 'YARN'
-                app.console.print_to_console(dialog_input)
+                #app.console.print_to_console(dialog_input)
             except:
                 error_prompt(line_number, "Input expression error.", self)
         else:
@@ -1820,7 +1828,9 @@ def tokenize(content, self):
     current_line_r = 0
     
     for lines in content:
+        #print("line", line_number,": ", lines)
         lines = lines.lstrip()
+        #print("line", line_number,": ", lines)
         #print(f"line {line_number}: {lines}")
         # print("ok",lines)
         tokens = []
