@@ -23,9 +23,9 @@ pip install tk
 
 To execute the LOL Code Interpreter you can run the following: 
 
-    ```
-    python lol_code_interpreter.py
-    ```
+```bash
+python lol_code_interpreter.py
+```
 
 This will launch the LOL Code Interpreter GUI. From there, you can open LOL Code files, edit the code, and execute it using the provided controls.
 
