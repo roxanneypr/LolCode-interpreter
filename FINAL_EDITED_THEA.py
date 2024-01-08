@@ -577,14 +577,6 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
         return stack[0]
 
 def print_analyzer(line, line_number, untokenized, self):
-    global printing_pattern, operand_pattern
-    """ print(untokenized)
-    print(printing_pattern)
-    print(operand_pattern)
-    match = printing_pattern.match(untokenized)
-    if not match:
-        print("here")
-        error_prompt(line_number, "Printing syntax error.", self) """
         
 
     global is_var_assignment
@@ -641,6 +633,7 @@ def print_analyzer(line, line_number, untokenized, self):
         else:
             operand.append(word)
 
+    print(operands)
     for op in operands:
         if len(op) == 1:
             if op[0][1] == "String Literal":
@@ -655,6 +648,8 @@ def print_analyzer(line, line_number, untokenized, self):
             else:
                 error_prompt(line_number, "Print expression error.", self)
         else:
+            if op[0][1] == "YARN Literal" or op[0][1] == "NUMBR Literal" or op[0][1] == "NUMBAR Literal" or op[0][1] == "TROOF Literal" or op[0][1] == "YARN Literal":
+                error_prompt(line_number, "Missing printing delimeter between operands.", self)
             expression = ""
             for word in op:
                 expression += word[0]
@@ -1242,6 +1237,8 @@ def loop_analyzer(self):
 
                     #check if the expression is valid
                     if loop_expression_tokens[0][1] == "Comparison Operator":
+                        print("ETOOOO", loop_expression_tokens)
+                        print(variables)
                         evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0][0], loop_expression, self)
                     else:
                         error_prompt(loop_tokens[0][0], "Invalid expression in loop.", self)
@@ -1299,7 +1296,7 @@ def loop_analyzer(self):
                         if loop_operation == "UPPIN":
                             variables[loop_variable]['value'] += 1
                         elif loop_operation == "NERFIN":
-                            variables[loop_variable]['value'] +- 1
+                            variables[loop_variable]['value'] -= 1
                                                 
                         evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0], loop_expression, self)
 
