@@ -6,6 +6,7 @@ I HAS A str2 ITZ 123
 I HAS A num2 ITZ 2
 I HAS A num1 ITZ 1
 I HAS A temp ITZ 8
+
 I HAS A temp2 ITZ 5
 BUHBYE
 
@@ -46,6 +47,22 @@ OMGWTF
     VISIBLE "DEFAULT"
     IM OUTTA YR print10
 OIC
+
+BUHBYE
+
+IM IN YR print10 UPPIN YR temp TIL BOTH SAEM temp AN 10 BTW HAHHAA
+    SUM OF 2 AN 2
+
+    WTF?
+    OMG 3
+    VISIBLE "HI"
+    OMG 4
+    VISIBLE "HELLO"
+    OMG 5
+    VISIBLE "WORLD"
+    OIC
+IM OUTTA YR print10
+
 
 
 KTHXBYE
