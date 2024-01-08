@@ -398,26 +398,17 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
         match_code_delim = kthxbye_pattern.match(untokenized_line)
         if 'BUHBYE' in untokenized_line:
             if inside_wazzup_buhbye == False:
-                #print(f"Error in line {line_number}: No matching WAZZUP declaration.")
                 error_prompt(line_number, "No matching WAZZUP declaration.", self)
             if not buhbye_pattern.match(untokenized_line):
-                #print(f"Error in line {line_number}: BUHBYE should be alone on its line.")
                 error_prompt(line_number, "BUHBYE should be alone on its line.", self)
-                #exit(0)
             else:
                 wazzup_line -=1
                 inside_wazzup_buhbye = False
         elif match_code_delim:
             if wazzup_line != 0:
-                #print(f"Error in line {line_number}: No matching BUHBYE declaration.")
                 error_prompt(line_number, "No matching BUHBYE declaration.", self)
-                #exit(0)
         elif not match:
-            #print(f"Error in line {line_number}: Must be variable declaration only.")
             error_prompt(line_number, "Must be variable declaration only.", self)
-            # pass
-            #exit(0)
-
 
     prev = ""
     stack = []
@@ -609,25 +600,16 @@ def print_analyzer(line, line_number, untokenized, self):
         if 'BUHBYE' in untokenized:
             if inside_wazzup_buhbye == False:
                 error_prompt(line_number, "No matching WAZZUP declaration.", self)
-                #print(f"Error in line {line_number}: No matching WAZZUP declaration.")
-                #exit(0)
             if not buhbye_pattern.match(untokenized):
                 error_prompt(line_number, "BUHBYE should be alone on its line.", self)
-                #print(f"Error in line {line_number}: BUHBYE should be alone on its line.")
-                #exit(0)
             else:
                 wazzup_line -=1
                 inside_wazzup_buhbye = False
         elif match_code_delim:
             if wazzup_line != 0:
                 error_prompt(line_number, "No matching BUHBYE declaration.", self)
-                #print(f"Error in line {line_number}: No matching BUHBYE declaration.")
-                #exit(0)
         elif not match:
             error_prompt(line_number, "Must be variable declaration only.", self)
-            #print(f"Error in line {line_number}: Must be variable declaration only.")
-            # pass
-            #exit(0)
 
     operands = []
     
@@ -639,12 +621,9 @@ def print_analyzer(line, line_number, untokenized, self):
     for word in line:
 
         counter += 1
-        #print(f"word: {word}")
         if word[0] == "VISIBLE" and isStart == True:  # Correct the condition here
             isStart = False
         elif word[1] == "Printing Delimiter" or counter == len(line):
-            #print(f"word: {word}")
-            #print(f"OPERANDDDD")
             if counter == len(line):
                 operand.append(word)
                 operands.append(operand.copy())  # Use copy to avoid modifying the original list
@@ -653,12 +632,9 @@ def print_analyzer(line, line_number, untokenized, self):
                 operands.append(operand.copy())  # Use copy to avoid modifying the original list
                 operand.clear()
         else:
-           # print("HERE")
             operand.append(word)
-    #print(f"OPERANDS: {operands}")
 
     for op in operands:
-        #print(f"OPERAND: {operand}")
         if len(op) == 1:
             if op[0][1] == "String Literal":
                 toprint += op[0][0][1:-1]
@@ -688,15 +664,12 @@ def print_analyzer(line, line_number, untokenized, self):
                     new_value = analyze(expression[:-1], op[0][1], line_number, op, self)
                     toprint += str(variables['IT']['value'])
                 except:
-                    #print("here")
                     error_prompt(line_number, "Print expression error.", self)
 
     console_dislay(toprint, self)
     return toprint
 
 def input_analyzer(line, line_number, untokenized_line, self):
-    #print(line)
-    #print(untokenized_line)
     if len(line) != 2:
         error_prompt(line_number, "Input expression error.", self)
     else:
@@ -743,22 +716,16 @@ def check_comment_errors(line, line_number, self):
         obtw_line = line_number
         if re.compile(r'^(?!OBTW).+').match(line):
             error_prompt(line_number, "Multi-line comment error.", self)
-            #print(f"Error in line {line_number}: Multi-line commment error.")
             comment_error = True
-            #exit(0)
             
     if re.search(r'TLDR', line): 
         # no OBTW 
         if not obtw:
             error_prompt(line_number, "No matching multi-line comment declaration.", self)
-            #print(f"Error in line {line_number}: No matching multi-line commment declaration.")
             comment_error = True
-            #exit(0)
         if line != "TLDR":
             error_prompt(line_number, "Multi-line comment delimiter error.", self)
-            #print(f"Error in line {line_number}: Multi-line commment delimiter error.")
             comment_error = True
-            #exit(0)
         obtw = False
     
     return comment_error
