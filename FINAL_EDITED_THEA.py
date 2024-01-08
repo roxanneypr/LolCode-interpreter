@@ -1966,18 +1966,42 @@ def tokenize(self):
     all_tokens = []
     
     # multiple_index = []
-
+    print("CONTENTTTTTTTTTT", content)
     # Remove empty strings from the list
     filtered_list = [item for item in content if item != ""]
+    filtered_list_removed_comments = [item.strip() for item in filtered_list if not item.startswith("BTW")]
+
+    # Create filtered_list_removed_blocks excluding elements between "OBTW" and "TLDR"
+    in_block = False
+    filtered_list_removed_blocks = []
+
+    for item in filtered_list_removed_comments:
+        if item.startswith("OBTW"):
+            in_block = True
+        elif item.startswith("TLDR"):
+            in_block = False
+        elif not in_block:
+            filtered_list_removed_blocks.append(item)
+
+    
     # print(filtered_list)
     #check if the lol code starts with HAI and ends with KTHXBYE
     # if filtered_list[0] != "HAI":
-    if not re.fullmatch(r'HAI *', filtered_list[0]):
+    if not re.fullmatch(r'HAI *', filtered_list_removed_blocks[0]):
         error_prompt(1, "Code delimiter not existing. Should start with HAI", self)
     # if filtered_list[len(filtered_list)-1] != "KTHXBYE":
-    if not re.fullmatch(r'KTHXBYE *', filtered_list[len(filtered_list)-1]):
-        error_prompt(len(filtered_list), "Code delimiter not existing. Should end with KTHXBYE", self)
-        
+    if not re.fullmatch(r'KTHXBYE *', filtered_list_removed_blocks[len(filtered_list_removed_blocks)-1]):
+        error_prompt(len(content), "Code delimiter not existing. Should end with KTHXBYE", self)
+    
+    # Count occurrences of 'HAI' and 'WAZZUP'
+    count_hai = filtered_list_removed_blocks.count('HAI')
+    count_wazzup = filtered_list_removed_blocks.count('WAZZUP')
+
+    if count_hai != 1:
+        error_prompt(1, "HAI should occur once.", self)
+    elif count_wazzup != 1:
+        error_prompt(len(content), "WAZZUP should occur once at the end.", self)
+    
     multi_line = False
     line_number = 1
     initial_multiline = True
@@ -2134,6 +2158,12 @@ def tokenize(self):
                 #remove comments from the tuple of lexemes
                 if tokens[1][1] not in to_remove:
                     removed_tuple = [tup for tup in tokens[1:] if tup[1] not in to_remove]
+                    """ print(removed_tuple)
+                    if removed_tuple[0][0] != "HAI":
+                        error_prompt(1, "Code delimiter not existing. Should start with HAI", self)
+                    elif removed_tuple[-1][0] != "KTHXBYE":
+                        error_prompt(len(filtered_list), "Code delimiter not existing. Should end with KTHXBYE", self)
+ """
                 else:
                     # EDITED THIS
                     line_number += 1
