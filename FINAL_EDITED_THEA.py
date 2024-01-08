@@ -779,24 +779,16 @@ def analyze(line, classification, line_number, all_tokens, self):
         if 'BUHBYE' in line:
             if inside_wazzup_buhbye == False:
                 error_prompt(line_number, "No matching WAZZUP declaration.", self)
-                #print(f"Error in line {line_number}: No matching WAZZUP declaration.")
-                #exit(0)
             if not buhbye_pattern.match(line):
                 error_prompt(line_number, "BUHBYE should be alone on its line.", self)
-                #print(f"Error in line {line_number}: BUHBYE should be alone on its line.")
-                #exit(0)
             else:
                 wazzup_line -=1
                 inside_wazzup_buhbye = False
         elif match_code_delim:
             if wazzup_line != 0:
                 error_prompt(line_number, "No matching BUHBYE declaration.", self)
-                #print(f"Error in line {line_number}: No matching BUHBYE declaration.")
-                #exit(0)
         elif not match:
             error_prompt(line_number, "Must be variable declaration only.", self)
-            #print(f"Error in line {line_number}: Must be variable declaration only.")
-            #exit(0)
         
 # ======================================INPUT================================
     if re.match(r'^\s*GIMMEH', line):
@@ -806,8 +798,6 @@ def analyze(line, classification, line_number, all_tokens, self):
             input_analyzer(all_tokens, line_number, line, self)
         else:
             error_prompt(line_number, "Incorrect format for input.", self)
-            #print(f"Error in line {line_number}: Incorrect format for input.")
-            #exit(0)
             
 # ======================================CONCATENATION======================================
     #check for concatenation
@@ -818,7 +808,6 @@ def analyze(line, classification, line_number, all_tokens, self):
             #Get all tokens
             tokens = smoosh_match.group(1).split(' AN ')
             
-            # print("tokenstokenstokens", tokens)
             correct_values = True
 
             to_concat = []
@@ -837,34 +826,6 @@ def analyze(line, classification, line_number, all_tokens, self):
                         error_prompt(line_number, f"Variable '{token}' is not yet declared.", self)
                         #print(f"Error in line {line_number}: Variable '{token}' is not yet declared.")
                         correct_values = False
-                        
-
-            # for token in tokens:
-            #     if token[0]:  # Check if the first capturing group is not empty (string within double quotes)
-            #         string_value = token[0]
-            #         to_concat.append(string_value)
-            #     else:
-            #         value = token[1]
-            #         if value in {'WIN', 'FAIL'}:
-            #             to_concat.append(value)
-            #         else:
-            #             try:
-            #                 number_value = int(value)
-            #                 to_concat.append(number_value)
-            #             except ValueError:
-            #                 try:
-            #                     float_value = float(value)
-            #                     to_concat.append(float_value)
-            #                 except ValueError:
-            #                     # other_list.append(value)
-            #                     #check if the variables are declared
-            #                     if value in variables:
-            #                         var_value = str(variables[value]['value'])
-            #                         to_concat.append(var_value)
-            #                     else:
-            #                         print(f"Error in line {line_number}: Variable '{value}' is not yet declared.")
-            #                         correct_values = False
-            #                         exit(0)
                                     
             if correct_values == True:
                 concatenated = ''.join([str(s).strip('"') for s in to_concat])
@@ -883,8 +844,7 @@ def analyze(line, classification, line_number, all_tokens, self):
     if 'WAZZUP' in line:
         
         if not wazzup_pattern.match(line):
-            print(f"Error in line {line_number}: WAZZUP should be alone on its line.")
-            exit(0)
+            error_prompt(line_number, "WAZZUP should be alone on its line.", self)
         else:
             inside_wazzup_buhbye = True
             wazzup_line += 1
@@ -924,20 +884,15 @@ def analyze(line, classification, line_number, all_tokens, self):
                         elif re.match(yarn_pattern, initial_value):
                                 variables[variable_name] = {'value': initial_value.strip(), 'data type': 'YARN'}
                         else:
-                            print(f"Error in line {line_number}: Variable declaration error.")
-                            exit(0)
+                            error_prompt(line_number, "Variable declaration error.", self)
                     else:
                         variables[variable_name] = {'value': None, 'data type': 'NOOB'}
                     
                     
             else:
-                # errormess = f"Error in line {line_number}: Variable declaration error."
-                print(f"Error in line {line_number}: Variable declaration error.")
-                exit(0)
+                error_prompt(line_number, "Variable declaration error.", self)
         else:
-            
-            print(f"Error in line {line_number}: Variable declaration error. Must be inside WAZZUP BUHBYE block.")
-            exit(0)
+            error_prompt(line_number, "Variable declaration error. Must be inside WAZZUP BUHBYE block.", self)
 
     elif classification == "Typecast Operator":
         # MAEK operator only modifies the resulting value
@@ -946,9 +901,6 @@ def analyze(line, classification, line_number, all_tokens, self):
         if match:
             variable_name = match.group(1)
             variable_type = match.group(3) if match.group(3) else match.group(2)
-            # print(variable_name, variable_type)
-
-            # print("dito ulit", variable_type)
             if variable_name in variables:
                 if 'IT' not in variables:
                     variables['IT'] = {'value': None, 'data type': 'NOOB'} 
@@ -967,7 +919,6 @@ def analyze(line, classification, line_number, all_tokens, self):
                         elif variables[variable_name]['data type'] == 'YARN':
                             var_value = variables[variable_name]['value']
                             var_strip = var_value.strip('\"')
-                            # print("STOPPPP",variables[variable_name]['value'].isnumeric())
                             if var_strip.isnumeric():
                                 variables['IT']['value'] = int(var_strip)
                                 variables['IT']['data type'] = 'NUMBR'
@@ -992,13 +943,11 @@ def analyze(line, classification, line_number, all_tokens, self):
                         elif variables[variable_name]['data type'] == 'YARN':
                             var_value = variables[variable_name]['value']
                             var_strip = var_value.strip('\"')
-                            # print("STOPPPP",variables[variable_name]['value'].isnumeric())
                             if var_strip.isnumeric():
                                 variables['IT']['value'] = int(var_strip)
                                 variables['IT']['data type'] = 'NUMBAR'
                             else:
-                                print(f"Error in line {line_number}: Cannot cast non-numeric YARN to NUMBAR.")
-                                exit(0)
+                                error_prompt(line_number, "Cannot cast non-numeric YARN to NUMBAR.", self)
                         elif variables[variable_name]['data type'] == 'NOOB':
                             variables['IT']['value'] = float(0)
                             variables['IT']['data type'] = 'NUMBAR'
@@ -1024,20 +973,13 @@ def analyze(line, classification, line_number, all_tokens, self):
                             variables['IT']['data type'] = 'TROOF'
                         
                     else:
-                        #print(variable_type)
                         error_prompt(line_number, "Typecast error.", self)
-                        #print(f"Error in line {line_number}: Typecast error.")
-                        #exit(0)
 
             else:
                 error_prompt(line_number, "Variable does not exist.", self)
-                #print(f"Error in line {line_number}: Variable does not exist.")
-                #exit(0)
                 
         else:
             error_prompt(line_number, "Typecast error.", self)
-            #print(f"Error in line {line_number}: ssTypecast error.")
-            #exit(0)
     
     elif classification == "Reassignment Operator":
         #make a regex for reassignment operator for lolcode 
@@ -1066,13 +1008,10 @@ def analyze(line, classification, line_number, all_tokens, self):
                             variables[variable_name]['value'] = int(variables[variable_name]['value'])
                             variables[variable_name]['data type'] = 'NUMBR'
                         else:
-                            print(f"Error in line {line_number}: Cannot reassign non-numeric YARN to NUMBR.")
-                            exit(0)
+                            error_prompt(line_number, "Cannot reassign non-numeric YARN to NUMBR.", self)
                     elif variables[variable_name]['data type'] == 'NOOB':
                         variables[variable_name]['value'] = 0
                         variables[variable_name]['data type'] = 'NUMBR'
-                    
-
                 elif variable_type == 'NUMBAR':
                     if variables[variable_name]['data type'] == 'NUMBR':
                         variables[variable_name]['value'] = float(variables[variable_name]['value'])
@@ -1089,8 +1028,7 @@ def analyze(line, classification, line_number, all_tokens, self):
                             variables[variable_name]['value'] = float(variables[variable_name]['value'])
                             variables[variable_name]['data type'] = 'NUMBAR'
                         else:
-                            print(f"Error in line {line_number}: Cannot reassign non-numeric YARN to NUMBAR.")
-                            exit(0)
+                            error_prompt(line_number, "Cannot reassign non-numeric YARN to NUMBAR.", self)
                     elif variables[variable_name]['data type'] == 'NOOB':
                         variables[variable_name]['value'] = float(0)
                         variables[variable_name]['data type'] = 'NUMBAR'
@@ -1116,22 +1054,16 @@ def analyze(line, classification, line_number, all_tokens, self):
                         variables[variable_name]['data type'] = 'TROOF'
                 
                 else:
-                    print(f"Error in line {line_number}: Reassignment error.")
-                    exit(0)
+                    error_prompt(line_number, "Reassignment error.", self)
         else:
-            print(f"Error in line {line_number}: Reassignment error.")
-            exit(0)
+            error_prompt(line_number, "Reassignment error.", self)
 
     elif classification == "Assignment Operator":
         #make a regex for assignment operator for lolcode 
-        # print("d2 ba")
         match = assignment_pattern.match(line)
         if match:
-            # print("yes")
             variable_name = match.group(1)
-            # print("dito be", variable_name)
             variable_val = match.group(3)
-            # print(variable_name, variable_val)
             if variable_name in variables:
                 if variable_val in variables:
                     temp_val = variables[variable_val]['value']
@@ -1140,17 +1072,14 @@ def analyze(line, classification, line_number, all_tokens, self):
                     variables[variable_name]['data type'] = temp_type
                 else:
                     if re.match(integer_pattern, variable_val):
-                        # variables[variable_name] = {'value': int(initial_value.strip()), 'data type': 'NUMBR'}
                         variables[variable_name]['value'] = int(variable_val)
                         variables[variable_name]['data type'] = 'NUMBR'
                     elif re.match(float_pattern, variable_val):
                         variables[variable_name]['value'] = float(variable_val)
                         variables[variable_name]['data type'] = 'NUMBAR'
-                        # variables[variable_name] = {'value': float(initial_value.strip()), 'data type': 'NUMBAR'}
                     elif re.match(boolean_pattern, variable_val):
                         variables[variable_name]['value'] = variable_val.strip()
                         variables[variable_name]['data type'] = 'TROOF'
-                        # variables[variable_name] = {'value': initial_value.strip(), 'data type': 'TROOF'}
                     else:
                         if re.match(arithmetic_pattern, variable_val) or re.match(boolean_operation, variable_val) or re.match(comparison_pattern, variable_val):
                             #remove tokens using expression
@@ -1164,16 +1093,12 @@ def analyze(line, classification, line_number, all_tokens, self):
                                 variables[variable_name] = {'value': float(new_value), 'data type': 'NUMBAR'}
                             elif re.match(boolean_pattern, str(new_value)):
                                 variables[variable_name] = {'value': str(new_value), 'data type': 'TROOF'}
-                            
-                            # print("===================NEW VALUE==============", (new_value))
-                            # print("line", line_number, ": call arithmetic function here to solve the val right away and store the result to the var initialized")
+                
                         else:
                             variables[variable_name]['value'] = variable_val.strip()
                             variables[variable_name]['data type'] = 'YARN'
-                            # variables[variable_name] = {'value': initial_value.strip(), 'data type': 'YARN'}
         else:
-            print(f"Error in line {line_number}: Assignment error.")
-            exit(0)
+            error_prompt(line_number, "Assignment error.", self)
 
 def if_else_statement(content, lines, self):
     global condition_index, if_else_condition
@@ -1184,26 +1109,22 @@ def if_else_statement(content, lines, self):
 
     # if either the length of if_keywords or else_keywords is 0, then there is no respective keyword found
     if len(if_keywords) == 0:
-        print(f"Error in line {if_else_condition[0][0]}: No If Keyword found.")
-        exit(0)
+        error_prompt(if_else_condition[0][0], "No If Keyword found.", self)
     if len(else_keywords) == 0:
         return
 
     # check if the if and else keywords have codeblocks
     for i in if_keywords:
         if i+1 >= len(if_else_condition) or if_else_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Else Keyword"]:
-            print(f"Error in line {if_else_condition[i][0]}: 'YA RLY' has no code block.")
-            exit(0)
+            error_prompt(if_else_condition[i][0], "'YA RLY' has no code block.", self)
 
     for i in else_keywords:
         if i+1 >= len(if_else_condition) or if_else_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Else Keyword"]:
-            print(f"Error in line {if_else_condition[i][0]}: 'NO WAI' has no code block.")
-            exit(0)
+            error_prompt(if_else_condition[i][0], "'NO WAI' has no code block.", self)
     
     # check if the variable 'IT' exists
     if 'IT' not in variables:
-        print(f"Error in line {if_else_condition[0][0]}: Accessing a null value.")
-        exit(0)
+        error_prompt(if_else_condition[0][0], "Accessing a null value.", self)
 
     # check if the value of the key 'IT' in variables is equal to WIN
     # get the index of the first exression after the if or else keyword
@@ -1262,10 +1183,6 @@ def if_else_statement(content, lines, self):
             function_analyzer(content[if_else_condition_newformat[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index], self)
         else:
             if if_else_condition[inner_condition_index][1][0][1] == 'Identifier':
-            
-            # print()   
-                # analyze(content[condition_index], if_else_condition[condition_index][1][1][1], if_else_condition[condition_index][0], tokens[1:])
-                # print("=======", if_else_condition[condition_index][1:][0])
                 
                 analyze(removed_comment_cond, if_else_condition[inner_condition_index][1][1][1], if_else_condition[inner_condition_index][0], if_else_condition[inner_condition_index][1:][0], self)
             else:
@@ -1744,24 +1661,20 @@ def switch_case_analyzer(content, lines, self):
     else_keywords = [i for i, x in enumerate(switch_case_condition) if x[1][0][1] == "Default Case Keyword"]
 
     if len(case_keywords) == 0:
-        print(f"Error in line {switch_case_condition[0][0]}: No Case Keyword found.")
-        exit(0)
+        error_prompt(switch_case_condition[0][0], "No Case Keyword found.", self)
     if len(else_keywords) == 0:
         return
 
     for i in case_keywords:
         if i+1 >= len(switch_case_condition) or switch_case_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Default Case Keyword"]:
-            print(f"Error in line {switch_case_condition[i][0]}: 'OMG' has no code block.")
-            exit(0)
+            error_prompt(switch_case_condition[i][0], "'OMG' has no code block.", self)
 
     for i in else_keywords:
         if i+1 >= len(switch_case_condition) or switch_case_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Default Case Keyword"]:
-            print(f"Error in line {switch_case_condition[i][0]}: 'OMGWTF' has no code block.")
-            exit(0)
+            error_prompt(switch_case_condition[i][0], "'OMGWTF' has no code block.", self)
 
     if 'IT' not in variables:
-        print(f"Error in line {if_else_condition[0][0]}: Accessing a null value.")
-        exit(0)
+        error_prompt(switch_case_condition[0][0], "Accessing a null value.", self)
     switch_case_condition_newformat = [[item[0]] + item[1] if len(item) > 1 else [item[0]] for item in switch_case_condition]
     for case_index in case_keywords:
         match = re.match(literal_pattern, switch_case_condition[case_index+1][1][1][0])
@@ -1813,19 +1726,15 @@ def switch_case_analyzer(content, lines, self):
                             print("line",switch_case_condition[i][0],": ", b)
                     elif switch_case_condition[i][1][0][1] == "Function Call keyword":
                         # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
-                        function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i])
+                        function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i], self)
                     else:
                         removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
-                        # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
-                        # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
                         if switch_case_condition[i][1][0][1] == 'Identifier':
                             analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
                         else:
                             analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
                         # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
-
-            print(f"Error in line {switch_case_condition[case_index+1][0]}: Invalid value format for OMG. Value must only be a yarn, troof, numbr, or numbar.")
-            exit(0)
+            error_prompt(switch_case_condition[case_index+1][0], "Invalid value format for OMG. Value must only be a yarn, troof, numbr, or numbar.", self)
 
 
     execute_default_case()
@@ -1847,13 +1756,13 @@ def execute_code_block(case_index, content, switch_case_condition_newformat, lin
                 if b is not None:
                     print("line",switch_case_condition[i][0],": ", b)
             elif switch_case_condition[i][1][0][1] == "Function Call keyword":
-                function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i])
+                function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i], self)
             else:
                 removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
                 if switch_case_condition[i][1][0][1] == 'Identifier':
-                    analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:])
+                    analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
                 else:
-                    analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:])
+                    analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
         i += 1
 
 def execute_default_case():
@@ -1862,7 +1771,6 @@ def execute_default_case():
     while i < len(switch_case_condition):
         if switch_case_condition[i][1][0][1] == "If-Else or Switch-Case Delimiter":
             break
-        #execute_line(i)
         i += 1
 
 def execute_line(i, content, lines, switch_case_condition, switch_case_condition_newformat, self):
@@ -1898,12 +1806,10 @@ def tokenize(content, self):
     #check if the lol code starts with HAI and ends with KTHXBYE
     # if filtered_list[0] != "HAI":
     if not re.fullmatch(r'HAI *', filtered_list[0]):
-        print(f'Error: Code delimiter not existing. Should start with HAI')
-        exit(0)     
+        error_prompt(1, "Code delimiter not existing. Should start with HAI", self)
     # if filtered_list[len(filtered_list)-1] != "KTHXBYE":
     if not re.fullmatch(r'KTHXBYE *', filtered_list[len(filtered_list)-1]):
-        print(f'Error: Code delimiter not existing. Should end with KTHXBYE')
-        exit(0)  
+        error_prompt(len(filtered_list), "Code delimiter not existing. Should end with KTHXBYE", self)
         
     multi_line = False
     line_number = 1
@@ -2077,8 +1983,7 @@ def tokenize(content, self):
 
                 if if_delimiter == True:
                     if removed_tuple[0][0] == "KTHXBYE" and oic_found == False:
-                        print("Error in line ", line_number, ": If-Else or Switch-Case Delimiter not found.")
-                        exit(0)
+                        error_prompt(line_number, "If-Else or Switch-Case Delimiter not found.", self)
                     if removed_tuple[0][0] == "OIC":
                         if_else_condition.append([tokens[0], removed_tuple])
                         if_else_statement(content, lines, self)
@@ -2097,8 +2002,7 @@ def tokenize(content, self):
 
                 elif switch_delimiter == True:
                     if removed_tuple[0][0] == "KTHXBYE" and oic_found == False:
-                        print("Error in line ", line_number, ": If-Else or Switch-Case Delimiter not found.")
-                        exit(0)
+                        error_prompt(line_number, "If-Else or Switch-Case Delimiter not found.", self)
                     else:
                         if removed_tuple[0][0] == "OIC":
                             switch_case_condition.append([tokens[0], removed_tuple])
@@ -2196,32 +2100,25 @@ def tokenize(content, self):
                     elif tokens[1][1] == "If Keyword":
                         if_keyword = True
                         if if_delimiter == False:
-                            print(f"Error in line {line_number}: Error in If Delimiter found.")
-                            exit(0)
+                            error_prompt(line_number, "Error in If Delimiter found.", self)
                     elif tokens[1][1] == "Else Keyword":
                         else_keyword = True
                         if if_delimiter == False:
-                            print(f"Error in line {line_number}: Error in If Delimiter found .")
-                            exit(0)
+                            error_prompt(line_number, "Error in If Delimiter found", self)
                     # sets the flag to true when if delimiter is found
                     elif tokens[1][1] == "If Delimiter":
                         
                         if_else_condition.append([tokens[0], removed_tuple])
                         if_delimiter = True
-                        # else:
-                        #     print(f"Error in line {line_number}: No expression found.")
-                        #     exit(0)
 
                     elif tokens[1][1] == "Case Keyword":
                         case_keyword = True
                         if switch_delimiter == False:
-                            print(f"Error in line {line_number}: No Switch-Case Delimiter found.")
-                            exit(0)
+                            error_prompt(line_number, "No Switch-Case Delimiter found.", self)
                     elif tokens[1][1] == "Default Case Keyword":
                         default_case_keyword = True
                         if switch_delimiter == False:
-                            print(f"Error in line {line_number}: No Switch-Case Delimiter found.")
-                            exit(0)
+                            error_prompt(line_number, "No Switch-Case Delimiter found.", self)
                     elif tokens[1][1] == "Switch-Case Delimiter":
                         switch_case_condition.append([tokens[0], removed_tuple])
                         # print("switchhh",tokens[0], removed_tuple)
