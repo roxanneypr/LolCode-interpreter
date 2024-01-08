@@ -3,7 +3,7 @@ HAI
 		I HAS A num1
 		I HAS A num2
 	BUHBYE
-	
+	SUM OF num AN 13
 	VISIBLE "Gimmeh a number: "
 	GIMMEH num1
 

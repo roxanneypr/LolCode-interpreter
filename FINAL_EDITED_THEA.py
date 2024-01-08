@@ -263,8 +263,6 @@ def error_prompt(line_number, error_message, self):
     is_error = True
 
 def arithmetic(line_number, stack, operation, self):
-    print(stack)
-    print(operation)
     operations_dict = {
         "SUM OF": "+",
         "DIFF OF": "-",
@@ -436,8 +434,9 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
     revline = line[::-1] 
 
     counter = 0
+    print(f"REVLINE ====== {revline}")
     for word in revline:
-        # print(f"word: {word} - prev: {prev}")
+        print(f"word: {word} - prev: {prev}")
 
         counter += 1
         # ======================== CHECK SYNTAX
@@ -475,6 +474,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
 
         # IF OPERATION, PERFORM
         if word[1] == "Arithmetic Operator":
+            print(stack)
             # print(stack)
             # if current token is an arithmetic operator
             stack = arithmetic(line_number, stack, word[0], self)
@@ -486,10 +486,10 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
         
         # IF OPERAND, ADD TO STACK
         elif word[0] in variables:
-            print(variables)
+            print(variables[word[0]]['value'])
             #operand = stack.append(variables[word[0]]['value'])
             if variables[word[0]]['data type'] == 'NUMBR' or variables[word[0]]['data type'] == 'NUMBAR' or variables[word[0]]['data type'] == 'TROOF':
-                if variables[word[0]]['data type'] == 'TROOF Literal':
+                if variables[word[0]]['data type'] == 'TROOF':
                     if variables[word[0]]['value'] == 'WIN':
                         stack.append(True)
                     else:
@@ -553,7 +553,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
                 error_prompt(line_number, "Boolean expression error.", self)
             return result
     
-    #print(stack)
+    print(stack)
     if len(stack) != 1:
         error_prompt(line_number, "Expression error.", self)
 
@@ -1904,7 +1904,7 @@ def tokenize(self):
     all_tokens = []
     
     # multiple_index = []
-    print("CONTENTTTTTTTTTT", content)
+
     # Remove empty strings from the list
     filtered_list = [item for item in content if item != ""]
     filtered_list_removed_comments = [item.strip() for item in filtered_list if not item.startswith("BTW")]
