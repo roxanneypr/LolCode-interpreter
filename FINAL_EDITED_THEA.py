@@ -1461,13 +1461,13 @@ def loop_analyzer(self):
 
                 else:
                     error_prompt(loop_tokens[0][0], f"Variable '{loop_variable}' is not of type NUMBR.", self)
-                    print(f"Error in line {loop_tokens[0][0]}: Variable '{loop_variable}' is not of type NUMBR.")
+                    # print(f"Error in line {loop_tokens[0][0]}: Variable '{loop_variable}' is not of type NUMBR.")
             else:
                 error_prompt(loop_tokens[0][0], f"Variable '{loop_variable}' is not yet declared.", self)
-                print(f"Error in lineeeeee {loop_tokens[0][0]}: Variable '{loop_variable}' is not yet declared.")
+                # print(f"Error in lineeeeee {loop_tokens[0][0]}: Variable '{loop_variable}' is not yet declared.")
         else:
             error_prompt(loop_tokens[len(loop_tokens)-1][0], f"Label '{loop_variable_end}' does not match loop label '{loop_label}'.", self)
-            print(f"Error in line {loop_tokens[len(loop_tokens)-1][0]}: Label '{loop_variable_end}' does not match loop label '{loop_label}'.")
+            # print(f"Error in line {loop_tokens[len(loop_tokens)-1][0]}: Label '{loop_variable_end}' does not match loop label '{loop_label}'.")
     else:
         error_prompt(loop_tokens[0][0], "Incorrect format for loops.", self)
         print(f"Error in line {loop_tokens[0][0]}: Incorrect format for loops.")
