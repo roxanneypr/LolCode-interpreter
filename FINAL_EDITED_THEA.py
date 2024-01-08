@@ -1621,14 +1621,13 @@ def function_analyzer(line, tokens, self):
                     
                     line_counter+=1        
             else:
-                error_prompt(function_line_number, f"Error in line {function_line_number}: Number of parameters do not match.")
-                print(f"Error in line {function_line_number}: Number of parameters do not match.")
+                error_prompt(function_line_number, f"Error in line {function_line_number}: Number of parameters do not match.", self)
+                # print(f"Error in line {function_line_number}: Number of parameters do not match.")
         else:
-            error_prompt(function_line_number, f"Error in line {function_line_number}: Function '{function_name}' not yet declared.")
-            print(f"Error in line {function_line_number}: Functionnnnnnnnnnn '{function_name}' not yet declared.")
+            error_prompt(function_line_number, f"Error in line {function_line_number}: Function '{function_name}' not yet declared.", self)
+            # print(f"Error in line {function_line_number}: Functionnnnnnnnnnn '{function_name}' not yet declared.")
     else:
-        error_prompt(function_line_number, f"Error in line {function_line_number}: Incorrect format for function call.")
-        print(f"Error in line {function_line_number}: Incorrect format for function call.")
+        error_prompt(function_line_number, f"Error in line {function_line_number}: Incorrect format for function call.", self)
     
     if has_return == True:
         #no error
