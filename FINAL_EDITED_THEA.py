@@ -463,7 +463,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
                 else:
                     error_prompt(line_number, "Expression error.", self)
             elif prev == "operator":
-                if word[1] == "Arithmetic Operator" or word[1] == "Boolean Operator":
+                if word[1] == "Arithmetic Operator" or word[1] == "Boolean Operator" or word[1] == "Comparison Operator" or word[1] == "Infinite Arity Operator":
                     prev = "operator"
                 elif word[0] == "AN":
                     prev = "AN"
