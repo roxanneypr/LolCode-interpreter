@@ -1904,7 +1904,7 @@ def tokenize(self):
     all_tokens = []
     
     # multiple_index = []
-
+    print("CONTENTTTTTTTTTT", content)
     # Remove empty strings from the list
     filtered_list = [item for item in content if item != ""]
     # print(filtered_list)
@@ -2447,6 +2447,7 @@ class Console(tk.Frame):
         
 
     def execute_code(self):
+        global content
         self.text_widget.delete("1.0", tk.END)
         app.lexeme_table.clear()
         app.symbol_table.clear()
