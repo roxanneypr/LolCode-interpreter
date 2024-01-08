@@ -1818,6 +1818,8 @@ def tokenize(content, self):
     current_line_r = 0
     
     for lines in content:
+        lines = lines.lstrip()
+        #print(f"line {line_number}: {lines}")
         # print("ok",lines)
         tokens = []
         tokens.append(line_number)
@@ -2201,17 +2203,6 @@ def main():
     #get the contents of the lol code
     content = readFile(file_name)
 
-    #tokens = tokenize(content)
-    
-
-
-    # print(tokens)
-    # for i in range(len(tokens)):
-    #     print(tokens[i])
-    
-
-    # for line in tokens:
-    #     print(line)
 
     print("\n====================VARIABLES====================")
     for key, value in variables.items():
