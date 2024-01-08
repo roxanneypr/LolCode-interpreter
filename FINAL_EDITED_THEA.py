@@ -427,13 +427,13 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
     # Check if infinite arity operator is present
     if line[0][0] == "ALL OF":
         if line[-1][0] == "MKAY":
-            print("============ALL OF")
+            #print("============ALL OF")
             isInfiniteAnd = True
         else:
             error_prompt(line_number, "Boolean expression error.", self)
     elif line[0][0] == "ANY OF":
         if line[-1][0] == "MKAY":
-            print("============ANY OF")
+            #print("============ANY OF")
             isInfiniteOr = True
         else:   
             error_prompt(line_number, "Boolean expression error.", self)
@@ -444,7 +444,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
         revline = revline[1:]
 
     counter = 0
-    print(f"REVLINE ====== {revline}")
+    #print(f"REVLINE ====== {revline}")
 
     # CHECK IF THERE IS NESTED INFINITE ARITY OPERATOR
     anyof = ('ANY OF', 'Infinite Arity Operator')
@@ -950,7 +950,7 @@ def analyze(line, classification, line_number, all_tokens, self):
                                 # Slice the list from that index onwards
                                 filtered_tokens = all_tokens[index+1:]
 
-                                print("(**(*(*)))",filtered_tokens)
+                                #print("(**(*(*)))",filtered_tokens)
                                 new_value = arithmetic_analyzer(filtered_tokens, line_number, line, self)
                                 # print("new value", new_value)
                                 if re.match(integer_pattern, str(new_value)):
