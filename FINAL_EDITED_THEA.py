@@ -149,6 +149,7 @@ printing_pattern = re.compile(r'^VISIBLE (' + operand_pattern + ')(?: (\+) (' + 
 #printing_pattern = re.compile(r'^VISIBLE (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern + ') (?:(\+) (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern +'))*$')
 variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( ITZ (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$') 
 typecast_pattern = re.compile(r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)( A (' + '|'.join(type_literal_syntax[:-1]) + ')| ' + type_literal_syntax[-1] + ')\s*( BTW .*)?\s*$')
+typecast_pattern_forfunc = r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)( A (' + '|'.join(type_literal_syntax[:-1]) + ')| ' + type_literal_syntax[-1] + ')\s*( BTW .*)?\s*$'
 reassignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)\s*((IS NOW A)\s*(' + '|'.join(type_literal_syntax) + ')|(R MAEK)\s*([a-zA-Z]+[a-zA-Z0-9_]*)\s*(' + '|'.join(type_literal_syntax) + '))\s*(BTW .*)?$')       
 assignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)( R (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$')        
 
@@ -176,6 +177,7 @@ combined_pattern_str = (
     smoosh_pattern_forfunc + '|' +
     boolean_pattern + '|' +
     literal_pattern + '|' +
+    typecast_pattern_forfunc + '|' +
     variable_pattern_forfunc
     )
 # Potential keywords array
@@ -1550,6 +1552,7 @@ def function_analyzer(line, tokens, self):
                         else:
                             temp.append(tokens[k][0])
         
+        print("\nNDSKJGKJDFGKJDHFGJKHDFGK", param_expressions)
         function_parameters = {}
         
         #check if function exists
@@ -1608,6 +1611,7 @@ def function_analyzer(line, tokens, self):
                             else:
                                 if new_classification == 'Identifier':
                                     # IEEDIT TO
+                                    print("ETOOOOOOOOOOO", expression_tokens_final)
                                     new_value = analyze(expression, new_classification, tokens[0], expression_tokens_final, self)
                                 else:
                                     new_value = analyze(expression, new_classification, tokens[0], expression_tokens_final, self)
@@ -1745,7 +1749,7 @@ def function_analyzer(line, tokens, self):
                         else:
                             # =============== PRINTING ===============
                             if keyword == "Output Keyword":
-                                to_print = print_analyzer(code_tuples, code_line_number, self)
+                                to_print = print_analyzer(code_tuples, code_line_number, line_global, self)
                                 if to_print is not None:
                                     print("THISSSSS", code_line_number,": ", to_print)
                                     
@@ -1804,16 +1808,17 @@ def function_analyzer(line, tokens, self):
                     
                     line_counter+=1        
             else:
-                error_prompt(function_line_number, f"Error in line {function_line_number}: Number of parameters do not match.", self)
+                error_prompt(function_line_number, "Number of parameters do not match.", self)
                 # print(f"Error in line {function_line_number}: Number of parameters do not match.")
         else:
-            error_prompt(function_line_number, f"Error in line {function_line_number}: Function '{function_name}' not yet declared.", self)
+            error_prompt(function_line_number, f"Function '{function_name}' not yet declared.", self)
             # print(f"Error in line {function_line_number}: Functionnnnnnnnnnn '{function_name}' not yet declared.")
     else:
-        error_prompt(function_line_number, f"Error in line {function_line_number}: Incorrect format for function call.", self)
+        error_prompt(function_line_number, "Incorrect format for function call.", self)
     
     if has_return == True:
         #no error
+        print("return to dibaaaaaa", return_value)
         if return_value != None:
             
             return_value_type = get_data_type(return_value)
@@ -1827,10 +1832,16 @@ def function_analyzer(line, tokens, self):
             else:
                 temp_variables['IT']['value'] = return_value
                 temp_variables['IT']['data type'] = return_value_type
+        else:
+            if 'IT' not in temp_variables:
+                temp_variables['IT'] = {'value': return_value, 'data type': "NOOB"}
+            else:
+                temp_variables['IT']['value'] = return_value
+                temp_variables['IT']['data type'] = "NOOB"
     
     #reset the variables back
     #function_var.update(function_parameters)
-    print(f"temp_variables: {function_parameters}")
+    # print(f"temp_variables: {function_parameters}")
     variables = temp_variables
     
     
