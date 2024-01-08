@@ -577,7 +577,7 @@ def print_analyzer(line, line_number, untokenized, self):
     match = printing_pattern.match(untokenized)
     if not match:
         print("here")
-        error_prompt(line_number, "Printing syntax error.", self)
+        # error_prompt(line_number, "Printing syntax error.", self)
         
 
     global is_var_assignment
@@ -1235,6 +1235,8 @@ def loop_analyzer(self):
 
                     #check if the expression is valid
                     if loop_expression_tokens[0][1] == "Comparison Operator":
+                        print("ETOOOO", loop_expression_tokens)
+                        print(variables)
                         evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0][0], loop_expression, self)
                     else:
                         error_prompt(loop_tokens[0][0], "Invalid expression in loop.", self)
@@ -1292,7 +1294,7 @@ def loop_analyzer(self):
                         if loop_operation == "UPPIN":
                             variables[loop_variable]['value'] += 1
                         elif loop_operation == "NERFIN":
-                            variables[loop_variable]['value'] +- 1
+                            variables[loop_variable]['value'] -= 1
                                                 
                         evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0], loop_expression, self)
 
