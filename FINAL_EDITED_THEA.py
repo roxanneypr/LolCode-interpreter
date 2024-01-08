@@ -29,6 +29,7 @@ def readFile(file_name):
                 for lines in file:
                     contents.append(lines.replace("\n", ""))
         else:
+            
             print(f"Error: The file {file_name} does not exist in the current directory.")
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -147,10 +148,11 @@ yarn_pattern = r'".*"'
 operand_pattern = r'(' + variable_pattern + '|' + literal_pattern + '|' + arithmetic_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern + ')'
 printing_pattern = re.compile(r'^VISIBLE (' + operand_pattern + ')(?: (\+) (' + operand_pattern + '))*$')
 #printing_pattern = re.compile(r'^VISIBLE (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern + ') (?:(\+) (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + yarn_pattern +'))*$')
-variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( ITZ (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$') 
+variable_declaration_pattern = re.compile(r'^I HAS A ([a-zA-Z]+[a-zA-Z0-9_]*)( ITZ (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + smoosh_pattern_forfunc + '))?\s*( BTW .*)?$') 
 typecast_pattern = re.compile(r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)( A (' + '|'.join(type_literal_syntax[:-1]) + ')| ' + type_literal_syntax[-1] + ')\s*( BTW .*)?\s*$')
+typecast_pattern_forfunc = r'^MAEK ([a-zA-Z]+[a-zA-Z0-9_]*)( A (' + '|'.join(type_literal_syntax[:-1]) + ')| ' + type_literal_syntax[-1] + ')\s*( BTW .*)?\s*$'
 reassignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)\s*((IS NOW A)\s*(' + '|'.join(type_literal_syntax) + ')|(R MAEK)\s*([a-zA-Z]+[a-zA-Z0-9_]*)\s*(' + '|'.join(type_literal_syntax) + '))\s*(BTW .*)?$')       
-assignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)( R (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '))?\s*( BTW .*)?$')        
+assignment_pattern = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_]*)( R (' + arithmetic_pattern + '|' + literal_pattern + '|' + variable_pattern + '|' + comparison_pattern + '|' + boolean_operation + '|' + smoosh_pattern_forfunc + '))?\s*( BTW .*)?$')        
 
 #loop_pattern = re.compile(r"IM IN YR ([a-zA-Z][a-zA-Z0-9_]*) (UPPIN|NERFIN) YR ([a-zA-Z][a-zA-Z0-9_]*) ((TIL|WILE) (.+))?")
 #function_pattern = re.compile(r'HOW IZ I (\w+)(?: YR (\w+)(?: AN YR (\w+)(?: AN YR (\w+))?)?)? *$')
@@ -176,6 +178,7 @@ combined_pattern_str = (
     smoosh_pattern_forfunc + '|' +
     boolean_pattern + '|' +
     literal_pattern + '|' +
+    typecast_pattern_forfunc + '|' +
     variable_pattern_forfunc
     )
 # Potential keywords array
@@ -725,6 +728,8 @@ def input_analyzer(line, line_number, untokenized_line, self):
             error_prompt(line_number, "Input expression error.", self)
 
 def remove_comments(line, all_tokens):
+    # print("Line", line)
+    # print("all tokens", all_tokens)
     line = line.strip()
     global to_remove
     words_to_remove = []
@@ -739,7 +744,9 @@ def remove_comments(line, all_tokens):
     else:
         for remove in words_to_remove:
             line = line.replace(remove, '')
+        print("ETO REMOVED NA DAPAT", line)
         return line
+
 
 #This function checks for single line and multi-line comment errors
 #if an error exists, prints the appropriate error message, else returns bool comment_error
@@ -769,6 +776,7 @@ def check_comment_errors(line, line_number, self):
     
     return comment_error
 
+# original
 expression = {"Variable Declaration", "Variable Assignment", "Identifier"}
 
 def get_data_type(variable_to_analyze):
@@ -906,12 +914,43 @@ def analyze(line, classification, line_number, all_tokens, self):
                             variables[variable_name] = {'value': float(initial_value.strip()), 'data type': 'NUMBAR'}
                         elif re.match(boolean_pattern, initial_value):
                             variables[variable_name] = {'value': initial_value.strip(), 'data type': 'TROOF'}
+                        elif re.match(smoosh_pattern, initial_value):
+                            # print("ff",initial_value)
+                            index = all_tokens.index(('ITZ', 'Variable Assignment'))
+                            
+                                # Slice the list from that index onwards
+                            filtered_tokens = all_tokens[index+1:]
+                            # print("\n\n\nentered R", filtered_tokens)
+                            # print("all tokens", all_tokens,"all tokens" ,initial_value, "all tokens",line_number, "all tokens",filtered_tokens )
+                            inside_wazzup_buhbye = False
+                            concatenated = analyze(initial_value, "Concatenation Operator", line_number,  filtered_tokens, self)
+                            # print("\n\n*",concatenated)
+                            # variables[variable_name]['value'] = variables['IT']['value']
+                            # variables[variable_name]['data type'] = 'YARN'
+                            variables[variable_name] = {'value': concatenated, 'data type': 'YARN'}
+
+
+                            if 'IT' in variables:
+                                del variables['IT']
+
+                            inside_wazzup_buhbye = True
+
                         elif re.match(arithmetic_pattern, initial_value) or re.match(boolean_operation, initial_value) or re.match(comparison_pattern, initial_value):
-                                # print("DETECTED")
+                                print("DETECTED")
                                 global is_var_assignment
                                 is_var_assignment = True
-                                filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
-                                print(filtered_tokens)
+
+                                # print(all_tokens)
+                                # filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
+                                
+                                # print(expression)
+
+                                index = all_tokens.index(('ITZ', 'Variable Assignment'))
+
+                                # Slice the list from that index onwards
+                                filtered_tokens = all_tokens[index+1:]
+
+                                print("(**(*(*)))",filtered_tokens)
                                 new_value = arithmetic_analyzer(filtered_tokens, line_number, line, self)
                                 # print("new value", new_value)
                                 if re.match(integer_pattern, str(new_value)):
@@ -963,7 +1002,8 @@ def analyze(line, classification, line_number, all_tokens, self):
                                 variables['IT']['value'] = int(var_strip)
                                 variables['IT']['data type'] = 'NUMBR'
                             else:
-                                print(f"Error in line {line_number}: Cannot cast non-numeric YARN to NUMBR.")
+                                error_prompt(line_number, "Cannot cast non-numeric YARN to NUMBR.", self)
+                                # print(f"Error in line {line_number}: Cannot cast non-numeric YARN to NUMBR.")
                         elif variables[variable_name]['data type'] == 'NOOB':
                             variables['IT']['value'] = 0
                             variables['IT']['data type'] = 'NUMBR'
@@ -1104,6 +1144,7 @@ def analyze(line, classification, line_number, all_tokens, self):
         if match:
             variable_name = match.group(1)
             variable_val = match.group(3)
+            print("here beh",variable_val)
             if variable_name in variables:
                 if variable_val in variables:
                     temp_val = variables[variable_val]['value']
@@ -1120,13 +1161,39 @@ def analyze(line, classification, line_number, all_tokens, self):
                     elif re.match(boolean_pattern, variable_val):
                         variables[variable_name]['value'] = variable_val.strip()
                         variables[variable_name]['data type'] = 'TROOF'
+                    elif re.match(smoosh_pattern, variable_val):
+                        print(variable_val)
+                        index = all_tokens.index(('R', 'Assignment Operator'))
+                        temp_itvalue = None
+                        temp_itdatatype = 'NOOB'
+                            # Slice the list from that index onwards
+                        filtered_tokens = all_tokens[index+1:]
+                        print("\n\n\nentered R",filtered_tokens)
+                        if 'IT' in variables:
+                            temp_itvalue = variables['IT']['value']
+                            temp_itdatatype = variables['IT']['data type']
+                        analyze(variable_val, "Concatenation Operator", line_number,  filtered_tokens, self)
+                        variables[variable_name]['value'] = variables['IT']['value']
+                        variables[variable_name]['data type'] = 'YARN'
+
+                        if temp_itvalue is None:
+                            del variables['IT']
+                        else:
+                            variables['IT']['value'] = temp_itvalue
+                            variables['IT']['data type'] = temp_itdatatype
                     else:
                         if re.match(arithmetic_pattern, variable_val) or re.match(boolean_operation, variable_val) or re.match(comparison_pattern, variable_val):
                             #remove tokens using expression
                             is_var_assignment = True
-                            filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
+                            # filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
+                            # new_value = arithmetic_analyzer(filtered_tokens, line_number, line, self)
+                            index = all_tokens.index(('R', 'Assignment Operator'))
+
+                            # Slice the list from that index onwards
+                            filtered_tokens = all_tokens[index+1:]
+
+                            print("(**(*(*)))",filtered_tokens)
                             new_value = arithmetic_analyzer(filtered_tokens, line_number, line, self)
-                            
                             if re.match(integer_pattern, str(new_value)):
                                 variables[variable_name] = {'value': int(new_value), 'data type': 'NUMBR'}
                             elif re.match(float_pattern, str(new_value)):
@@ -1141,7 +1208,7 @@ def analyze(line, classification, line_number, all_tokens, self):
             error_prompt(line_number, "Assignment error.", self)
 
 def if_else_statement(content, lines, self):
-    global condition_index, if_else_condition
+    global condition_index, if_else_condition, is_loop
 
     # check the existence of if and else keywords and their respective codeblocks
     if_keywords = [i for i, x in enumerate(if_else_condition) if x[1][0][1] == "If Keyword"]
@@ -1206,30 +1273,50 @@ def if_else_statement(content, lines, self):
         
         # remove the comments in the line if there are any
         removed_comment_cond = remove_comments(content[if_else_condition[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index])
-
-        if if_else_condition[inner_condition_index][1][0][1] == 'Break Keyword':
-            break
-        elif if_else_condition[inner_condition_index][1][0][1] == 'Arithmetic Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Boolean Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Comparison Operator':
-            b = arithmetic_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines, self)
-            if b is not None:
-                print("line",if_else_condition[inner_condition_index][0],": ", b)
-        elif if_else_condition[inner_condition_index][1][0][1] == 'Output Keyword':
-            b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines, self)
-            if b is not None:
-                print("line",if_else_condition[inner_condition_index][0],": ", b)
-                #console_dislay(b, self)
-        elif if_else_condition[inner_condition_index][1][0][1] == 'Function Call keyword':
-            # print(f'{content[if_else_condition_newformat[inner_condition_index][0]-1]}\n{if_else_condition_newformat[inner_condition_index]}')
-            function_analyzer(content[if_else_condition_newformat[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index], self)
-        else:
-            if if_else_condition[inner_condition_index][1][0][1] == 'Identifier':
-                
-                analyze(removed_comment_cond, if_else_condition[inner_condition_index][1][1][1], if_else_condition[inner_condition_index][0], if_else_condition[inner_condition_index][1:][0], self)
+        
+        
+        # print("ETOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO", if_else_condition)
+        # print("removed_comment_cond", removed_comment_cond)
+        # print("[if_else_condition[inner_condition_index]",if_else_condition[inner_condition_index] )
+        # =============== LOOPS ===============
+        if if_else_condition[inner_condition_index][1][0][1] == 'Loop Start Delimiter':
+            is_loop = True
+        
+         #add the loop code to a list
+        if is_loop == True:   
+            loop_lines.append(removed_comment_cond)
+            loop_tokens.append(if_else_condition[inner_condition_index])
+        
+        #set is_loop to False and call loop analyzer
+        if if_else_condition[inner_condition_index][1][0][1] == "Loop End Delimiter":
+            is_loop = False
+            loop_analyzer(self)    
+            
+        if not is_loop:
+            if if_else_condition[inner_condition_index][1][0][1] == 'Break Keyword':
+                break
+            elif if_else_condition[inner_condition_index][1][0][1] == 'Arithmetic Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Boolean Operator' or if_else_condition[inner_condition_index][1][0][1] == 'Comparison Operator':
+                b = arithmetic_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines, self)
+                if b is not None:
+                    print("line",if_else_condition[inner_condition_index][0],": ", b)
+            elif if_else_condition[inner_condition_index][1][0][1] == 'Output Keyword':
+                b = print_analyzer(if_else_condition_newformat[inner_condition_index][1:], if_else_condition[inner_condition_index][0], lines, self)
+                if b is not None:
+                    print("line",if_else_condition[inner_condition_index][0],": ", b)
+                    #console_dislay(b, self)
+            elif if_else_condition[inner_condition_index][1][0][1] == 'Function Call keyword':
+                # print(f'{content[if_else_condition_newformat[inner_condition_index][0]-1]}\n{if_else_condition_newformat[inner_condition_index]}')
+                function_analyzer(content[if_else_condition_newformat[inner_condition_index][0]-1], if_else_condition_newformat[inner_condition_index], self)
             else:
-                analyze(removed_comment_cond,  if_else_condition[inner_condition_index][1][0][1], if_else_condition[inner_condition_index][0], if_else_condition[inner_condition_index][1:][0], self)
+                if if_else_condition[inner_condition_index][1][0][1] == 'Identifier':
+                    
+                    analyze(removed_comment_cond, if_else_condition[inner_condition_index][1][1][1], if_else_condition[inner_condition_index][0], if_else_condition[inner_condition_index][1:][0], self)
+                else:
+                    analyze(removed_comment_cond,  if_else_condition[inner_condition_index][1][0][1], if_else_condition[inner_condition_index][0], if_else_condition[inner_condition_index][1:][0], self)
 
 def loop_analyzer(self):
-    global loop_lines, loop_tokens, if_keyword
+    global loop_lines, loop_tokens, if_keyword, oic_found, switch_delimiter
+    global switch_case_condition, temp, default_case_index, if_else_condition, condition_index, if_delimiter
     
     # print("HEREEEEEEEEEEEEEEEEEEEEEEEEE", loop_tokens[0][1][1:])
     print("================INSIDE LOOP================")
@@ -1275,8 +1362,8 @@ def loop_analyzer(self):
 
                     #check if the expression is valid
                     if loop_expression_tokens[0][1] == "Comparison Operator":
-                        print("ETOOOO", loop_expression_tokens)
-                        print(variables)
+                        # print("ETOOOO", loop_expression_tokens)
+                        # print(variables)
                         evaluate = arithmetic_analyzer(loop_expression_tokens, loop_tokens[0][0], loop_expression, self)
                     else:
                         error_prompt(loop_tokens[0][0], "Invalid expression in loop.", self)
@@ -1290,36 +1377,106 @@ def loop_analyzer(self):
                         
                         #Execute loop code block 
                         for loop_code_line in loop_tokens_code:
+
                             classification = loop_code_line[1][0][1]
                             
                             if classification == "Break Keyword":
                                 is_GTFO = True
-                                break            
-                                        
-                            if classification == "Output Keyword":
-                                b = print_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter], self)
+
+                                break   
+
+                            if re.match(oic_pattern, loop_code_line[1][0][0]):
+                                oic_found = True
+                            
+                            if if_delimiter == True:
+                                if loop_code_line[1][0][0] == "KTHXBYE" and oic_found == False:
+                                    error_prompt(loop_code_line[0], "If-Else or Switch-Case Delimiter not found.", self)
+                                    # print("Error in line ", loop_code_line[0], ": If-Else or Switch-Case Delimiter not found.")
+                                    # exit(0)
+                                if loop_code_line[1][0][0] == "OIC":
+                                    print(loop_code_line)
+                                    if_else_condition.append(loop_code_line)
+                                    if_else_statement(content, line_global, self)
+                                    condition_index = []
+                                    if_delimiter = False
+                                    oic_found = False
+                                    if_else_condition = []
+                                if_else_condition.append(loop_code_line)
+                            elif switch_delimiter == True:
+                                if loop_code_line[1][0][0] == "KTHXBYE" and oic_found == False:
+                                    error_prompt(loop_code_line[0], "If-Else or Switch-Case Delimiter not found.", self)
+                                    # print("Error in line ", loop_code_line[0], ": If-Else or Switch-Case Delimiter not found.")
+                                    # exit(0)
+                                if loop_code_line[1][0][0] == "OIC":
+                                    switch_case_condition.append(loop_code_line)
+                                    switch_case_analyzer(content, line_global, self)
+                                    switch_delimiter = False
+                                    oic_found = False
+                                    switch_case_condition = []
+                                    temp = 0
+                                    default_case_index = 0
+                                switch_case_condition.append(loop_code_line)
+                            else:         
+                                if classification == "Output Keyword":
+                                    b = print_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter], self)
+                                    
+                                    if b is not None:
+                                        # print(loop_code_line[1:])
+                                        #console_dislay(b, self)
+                                        print("THISSSSS",loop_code_line[0],": ", b)
+                                elif classification == "Arithmetic Operator" or classification == "Boolean Operator" or classification == "Comparison Operator":
+                                    b = arithmetic_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter], self)
+                                    if b is not None:
+                                        print("line", loop_code_line[0],": ", b)
+                                elif classification == "Function Call keyword":
+                                    tokens_loop = [loop_code_line[0]]
+                                    
+                                    for to_add in loop_code_line[1:][0]:
+                                        tokens_loop.append(to_add)
+                                    
+                                    function_analyzer(loop_block[loop_block_counter], tokens_loop, self)
                                 
-                                if b is not None:
-                                    # print(loop_code_line[1:])
-                                    #console_dislay(b, self)
-                                    print("THISSSSS",loop_code_line[0],": ", b)
-                            if classification == "Arithmetic Operator" or classification == "Boolean Operator" or classification == "Comparison Operator" or classification == "Infinite Arity Operator":
-                                b = arithmetic_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter], self)
-                                if b is not None:
-                                    print("line", loop_code_line[0],": ", b)
-                            if classification == "Function Call keyword":
-                                tokens_loop = [loop_code_line[0]]
+                                # =============== IF ELSE STATEMENT ===============
+
+                                elif classification == "If Keyword":
+                                    if_keyword = True
+                                    if if_delimiter == False:
+                                        print(f"Error in line {loop_code_line[0]}: Error in If Delimiter found.")
+                                        exit(0)
+                                elif classification == "Else Keyword":
+                                    else_keyword = True
+                                    if if_delimiter == False:
+                                        error_prompt(loop_code_line[0], "No If Delimiter found.", self)
+                                        # print(f"Error in line {loop_code_line[0]}: Error in If Delimiter found .")
+                                        # exit(0)
+                                elif classification == "If Delimiter":
+                                    if_else_condition.append(loop_code_line)
+                                    if_delimiter = True
+
+                                # =============== SWITCH CASE STATEMENT ===============
+                                elif classification == "Case Keyword":
+                                    case_keyword = True
+                                    if switch_delimiter == False:
+                                        error_prompt(loop_code_line[0], "No Switch-Case Delimiter found.", self)
+                                        # print(f"Error in line {loop_code_line[0]}: No Switch-Case Delimiter found.")
+                                        # exit(0)
+                                elif classification == "Default Case Keyword":
+                                    default_case_keyword = True
+                                    if switch_delimiter == False:
+                                        error_prompt(loop_code_line[0], "No Switch-Case Delimiter found.", self)
+                                        # print(f"Error in line {loop_code_line[0]}: No Switch-Case Delimiter found.")
+                                        # exit(0)
+                                elif classification == "Switch-Case Delimiter":
+                                    switch_case_condition.append(loop_code_line)
+                                    # print("switchhh",tokens[0], removed_tuple)
+                                    switch_delimiter = True
                                 
-                                for to_add in loop_code_line[1:][0]:
-                                    tokens_loop.append(to_add)
-                                
-                                function_analyzer(loop_block[loop_block_counter], tokens_loop, self)
-                            else:
-                                # removed_comment = remove_comments(loop_block[loop_block_counter], loop_code_line)       
-                                if classification == 'Identifier':
-                                    analyze(loop_block[loop_block_counter], loop_code_line[1][1][1], loop_code_line[0], loop_code_line[1:][0], self)
                                 else:
-                                    analyze(loop_block[loop_block_counter], classification, loop_code_line[0], loop_code_line[1:][0], self)
+                                    # removed_comment = remove_comments(loop_block[loop_block_counter], loop_code_line)       
+                                    if classification == 'Identifier':
+                                        analyze(loop_block[loop_block_counter], loop_code_line[1][1][1], loop_code_line[0], loop_code_line[1:][0], self)
+                                    else:
+                                        analyze(loop_block[loop_block_counter], classification, loop_code_line[0], loop_code_line[1:][0], self)
 
                             #increment loop code block line
                             loop_block_counter += 1
@@ -1340,13 +1497,13 @@ def loop_analyzer(self):
 
                 else:
                     error_prompt(loop_tokens[0][0], f"Variable '{loop_variable}' is not of type NUMBR.", self)
-                    print(f"Error in line {loop_tokens[0][0]}: Variable '{loop_variable}' is not of type NUMBR.")
+                    # print(f"Error in line {loop_tokens[0][0]}: Variable '{loop_variable}' is not of type NUMBR.")
             else:
                 error_prompt(loop_tokens[0][0], f"Variable '{loop_variable}' is not yet declared.", self)
-                print(f"Error in lineeeeee {loop_tokens[0][0]}: Variable '{loop_variable}' is not yet declared.")
+                # print(f"Error in lineeeeee {loop_tokens[0][0]}: Variable '{loop_variable}' is not yet declared.")
         else:
             error_prompt(loop_tokens[len(loop_tokens)-1][0], f"Label '{loop_variable_end}' does not match loop label '{loop_label}'.", self)
-            print(f"Error in line {loop_tokens[len(loop_tokens)-1][0]}: Label '{loop_variable_end}' does not match loop label '{loop_label}'.")
+            # print(f"Error in line {loop_tokens[len(loop_tokens)-1][0]}: Label '{loop_variable_end}' does not match loop label '{loop_label}'.")
     else:
         error_prompt(loop_tokens[0][0], "Incorrect format for loops.", self)
         print(f"Error in line {loop_tokens[0][0]}: Incorrect format for loops.")
@@ -1486,6 +1643,7 @@ def function_analyzer(line, tokens, self):
                         else:
                             temp.append(tokens[k][0])
         
+        print("\nNDSKJGKJDFGKJDHFGJKHDFGK", param_expressions)
         function_parameters = {}
         
         #check if function exists
@@ -1544,6 +1702,7 @@ def function_analyzer(line, tokens, self):
                             else:
                                 if new_classification == 'Identifier':
                                     # IEEDIT TO
+                                    print("ETOOOOOOOOOOO", expression_tokens_final)
                                     new_value = analyze(expression, new_classification, tokens[0], expression_tokens_final, self)
                                 else:
                                     new_value = analyze(expression, new_classification, tokens[0], expression_tokens_final, self)
@@ -1628,6 +1787,8 @@ def function_analyzer(line, tokens, self):
                         is_loop = True
                     #add the loop code to a list
                     if is_loop == True:    
+                        print("codeline", code_line)
+                        print("codelineeee", [code_line_number, code_tuples])
                         loop_lines.append(code_line)
                         loop_tokens.append([code_line_number, code_tuples])
 
@@ -1642,8 +1803,9 @@ def function_analyzer(line, tokens, self):
                         if if_delimiter == True:
 
                             if code_tuples[0][0] == "KTHXBYE" and oic_found == False:
-                                print("Error in line ", code_line_number, ": If-Else or Switch-Case Delimiter not found.")
-                                exit(0)
+                                error_prompt(code_line_number, "If-Else or Switch-Case Delimiter not found.", self)
+                                # print("Error in line ", code_line_number, ": If-Else or Switch-Case Delimiter not found.")
+                                # exit(0)
 
                             if code_tuples[0][0] == "OIC":
                                 if_else_condition.append(code_block)
@@ -1661,8 +1823,9 @@ def function_analyzer(line, tokens, self):
                             if_else_condition.append(code_block)
                         elif switch_delimiter == True:
                             if code_tuples[0][0] == "KTHXBYE" and oic_found == False:
-                                print("Error in line ", code_line_number, ": If-Else or Switch-Case Delimiter not found.")
-                                exit(0)
+                                error_prompt(code_line_number, "If-Else or Switch-Case Delimiter not found.", self)
+                                # print("Error in line ", code_line_number, ": If-Else or Switch-Case Delimiter not found.")
+                                # exit(0)
                             else:
                                 if code_tuples[0][0] == "OIC":
                                     switch_case_condition.append(code_block)
@@ -1679,7 +1842,7 @@ def function_analyzer(line, tokens, self):
                         else:
                             # =============== PRINTING ===============
                             if keyword == "Output Keyword":
-                                to_print = print_analyzer(code_tuples, code_line_number, self)
+                                to_print = print_analyzer(code_tuples, code_line_number, line_global, self)
                                 if to_print is not None:
                                     print("THISSSSS", code_line_number,": ", to_print)
                                     
@@ -1692,13 +1855,15 @@ def function_analyzer(line, tokens, self):
                             elif keyword == "If Keyword":
                                 if_keyword = True
                                 if if_delimiter == False:
-                                    print(f"Error in line {code_line_number}: Error in If Delimiter found.")
-                                    exit(0)
+                                    error_prompt(code_line_number, "No If Delimiter found.", self)
+                                    # print(f"Error in line {code_line_number}: Error in If Delimiter found.")
+                                    # exit(0)
                             elif keyword == "Else Keyword":
                                 else_keyword = True
                                 if if_delimiter == False:
-                                    print(f"Error in line {code_line_number}: Error in If Delimiter found .")
-                                    exit(0)
+                                    error_prompt(code_line_number, "No If Delimiter found.", self)
+                                    # print(f"Error in line {code_line_number}: Error in If Delimiter found .")
+                                    # exit(0)
                             elif keyword == "If Delimiter":
                                 if_deli_index = access_function[2].index(code_block)
                                 # print("THIS IS THE FORMAT", [code_line_number, code_tuples])
@@ -1709,13 +1874,15 @@ def function_analyzer(line, tokens, self):
                             elif keyword == "Case Keyword":
                                 case_keyword = True
                                 if switch_delimiter == False:
-                                    print(f"Error in line {code_line_number}: No Switch-Case Delimiter found.")
-                                    exit(0)
+                                    error_prompt(code_line_number, "No Switch-Case Delimiter found.", self)
+                                    # print(f"Error in line {code_line_number}: No Switch-Case Delimiter found.")
+                                    # exit(0)
                             elif keyword == "Default Case Keyword":
                                 default_case_keyword = True
                                 if switch_delimiter == False:
-                                    print(f"Error in line {code_line_number}: No Switch-Case Delimiter found.")
-                                    exit(0)
+                                    error_prompt(code_line_number, "No Switch-Case Delimiter found.", self)
+                                    # print(f"Error in line {code_line_number}: No Switch-Case Delimiter found.")
+                                    # exit(0)
                             elif keyword == "Switch-Case Delimiter":
                                 switch_case_condition.append(code_block)
                                 # print("switchhh",tokens[0], removed_tuple)
@@ -1738,16 +1905,17 @@ def function_analyzer(line, tokens, self):
                     
                     line_counter+=1        
             else:
-                error_prompt(function_line_number, f"Error in line {function_line_number}: Number of parameters do not match.", self)
+                error_prompt(function_line_number, "Number of parameters do not match.", self)
                 # print(f"Error in line {function_line_number}: Number of parameters do not match.")
         else:
-            error_prompt(function_line_number, f"Error in line {function_line_number}: Function '{function_name}' not yet declared.", self)
+            error_prompt(function_line_number, f"Function '{function_name}' not yet declared.", self)
             # print(f"Error in line {function_line_number}: Functionnnnnnnnnnn '{function_name}' not yet declared.")
     else:
-        error_prompt(function_line_number, f"Error in line {function_line_number}: Incorrect format for function call.", self)
+        error_prompt(function_line_number, "Incorrect format for function call.", self)
     
     if has_return == True:
         #no error
+        print("return to dibaaaaaa", return_value)
         if return_value != None:
             
             return_value_type = get_data_type(return_value)
@@ -1761,17 +1929,22 @@ def function_analyzer(line, tokens, self):
             else:
                 temp_variables['IT']['value'] = return_value
                 temp_variables['IT']['data type'] = return_value_type
+        else:
+            if 'IT' not in temp_variables:
+                temp_variables['IT'] = {'value': return_value, 'data type': "NOOB"}
+            else:
+                temp_variables['IT']['value'] = return_value
+                temp_variables['IT']['data type'] = "NOOB"
     
     #reset the variables back
     #function_var.update(function_parameters)
-    #print(f"temp_variables: {function_parameters}")
     variables = temp_variables
     
     
     return return_value
 
 def switch_case_analyzer(content, lines, self):
-    global switch_case_condition, temp, default_case_index
+    global switch_case_condition, temp, default_case_index, is_loop
 
 
     print(switch_case_condition)
@@ -1782,43 +1955,58 @@ def switch_case_analyzer(content, lines, self):
 
     # if either the length of case_keywords or else_keywords is 0, then there is no respective keyword found
     if len(case_keywords) == 0:
-        print(f"Error in line {switch_case_condition[0][0]}: No Case Keyword found.")
-        exit(0)
+        error_prompt(switch_case_condition[0][0], "No Case Keyword found.", self)
+        # print(f"Error in line {switch_case_condition[0][0]}: No Case Keyword found.")
+        # exit(0)
     if len(else_keywords) == 0:
         pass
 
     # check if the case and else keywords have codeblocks
     for i in case_keywords:
         if i+1 >= len(switch_case_condition) or switch_case_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Default Case Keyword"]:
-            print(f"Error in line {switch_case_condition[i][0]}: 'OMG' has no code block.")
-            exit(0)
+            error_prompt(switch_case_condition[i][0], "'OMG' has no code block.", self)
+            # print(f"Error in line {switch_case_condition[i][0]}: 'OMG' has no code block.")
+            # exit(0)
 
     for i in else_keywords:
         if i+1 >= len(switch_case_condition) or switch_case_condition[i+1][1][0][1] in ["If-Else or Switch-Case Delimiter", "Default Case Keyword"]:
-            print(f"Error in line {switch_case_condition[i][0]}: 'OMGWTF' has no code block.")
-            exit(0)
+            error_prompt(switch_case_condition[i][0], "'OMGWTF' has no code block.", self)
+            # print(f"Error in line {switch_case_condition[i][0]}: 'OMGWTF' has no code block.")
+            # exit(0)
 
     if 'IT' not in variables:
         # print(if_else_condition)
-        print(f"Error in line {if_else_condition[0][0]}: Accessing a null value.")
-        exit(0)
+        error_prompt(switch_case_condition[0][0], "Accessing a null value.", self)
+        # print(f"Error in line {if_else_condition[0][0]}: Accessing a null value.")
+        # exit(0)
 
-    match = re.match(literal_pattern, switch_case_condition[1][1][1][0])
+    # match = re.match(literal_pattern, switch_case_condition[1][1][1][0])
+    # print("*&&*",  switch_case_condition[1][1][1][0])
     # this algo is for the OMG keyword where it will check if the value of IT is equal to the value literal
     # if variables['IT']['value'] == 'WIN':
     #     pass
     # match = literal_pattern.match(switch_case_condition[1][1][1][0])
-    if match:
+    # if match:
+
+    # else:
+    #     # for i in range(len(switch_case_condition)):
+    #     #     print("*",switch_case_condition[i])
+    #     print(f"Error in line {switch_case_condition[1][0]}: Invalid value format for OMG. Value must only be a yarn, troof, numbr, or numbar.")
+    #     exit(0)
         # print("OK VALID FORMAT")
         
         
         # print(type(temp))
-        switch_case_condition_newformat = [[item[0]] + item[1] if len(item) > 1 else [item[0]] for item in switch_case_condition]
-        print(switch_case_condition_newformat)
-        
-        # get the code to execute
-        for code_block in range(1, len(switch_case_condition)):
-            if switch_case_condition[code_block][1][0][1] ==  "Case Keyword":
+    switch_case_condition_newformat = [[item[0]] + item[1] if len(item) > 1 else [item[0]] for item in switch_case_condition]
+    print(switch_case_condition_newformat)
+    
+    # get the code to execute
+    for code_block in range(1, len(switch_case_condition)):
+        if switch_case_condition[code_block][1][0][1] ==  "Case Keyword":
+            match = re.match(literal_pattern, switch_case_condition[code_block][1][1][0])
+            # print("OMG**", switch_case_condition[code_block][1][1][0])
+            print("&*^%", switch_case_condition[code_block][1][1][0])
+            if match:
                 print("hre")
                 print(switch_case_condition[code_block][1][0][1])
                 if switch_case_condition[code_block][1][1][1] == "NUMBR Literal":
@@ -1830,6 +2018,8 @@ def switch_case_analyzer(content, lines, self):
                 print("temp",temp)
                 
                 if temp == variables['IT']['value']:
+                    print("MATCH", switch_case_condition[code_block][1][1][0])
+
                     print("ENTERED HERE")
                     # print("check switch here",switch_case_condition[1][1][1][0], variables['IT']['value'])
                     # if switch_case_condition[2][1][0][1] == "Arithmetic Operator" or  switch_case_condition[2][1][0][1] == "Boolean Operator":
@@ -1840,94 +2030,157 @@ def switch_case_analyzer(content, lines, self):
                         if switch_case_condition[i][1][0][1] ==  "Case Keyword" or switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter" or switch_case_condition[i][1][0][1] == "Default Case Keyword":
                             return
                         else:
-                            # print(i)
-                            if switch_case_condition[i][1][0][1] == "Break Keyword":
-                                break
-                            elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator" or switch_case_condition[i][1][0][1] == "Infinite Arity Operator":
-                                # print(f'yooo {switch_case_condition[i][0]}')
-                                b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
-                                
-                                # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
-                                if b is not None:
-                                    print("line",switch_case_condition[i][0],": ", b)
-                                # print("hereee", b)
-                            elif switch_case_condition[i][1][0][1] == "Output Keyword":
-                                # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
 
-                                b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
-                                if b is not None:
-                                    print("line",switch_case_condition[i][0],": ", b)
-                            elif switch_case_condition[i][1][0][1] == "Function Call keyword":
-                                # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
-                                function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i], self)
-                            else:
-                                removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
-                                # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
-                                # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
-                                if switch_case_condition[i][1][0][1] == 'Identifier':
-                                    analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+
+                            removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
+                            # print("REMOVED DAPAT:::::::::::", removed_comment)
+                            
+                            # =============== LOOPS ===============
+                            if switch_case_condition[i][1][0][1] == 'Loop Start Delimiter':
+                                is_loop = True
+                                # print("CHECKINGGGGGGGGGGG", switch_case_condition[i][1][0][1])
+                            
+                            #add the loop code to a list
+                            if is_loop == True:   
+                                loop_lines.append(removed_comment)
+                                loop_tokens.append([switch_case_condition_newformat[i][0], switch_case_condition_newformat[i][1:]])
+                            
+                            #set is_loop to False and call loop analyzer
+                            if switch_case_condition[i][1][0][1] == "Loop End Delimiter":
+                                is_loop = False
+                                loop_analyzer(self)
+                            
+                            if not is_loop:
+                                if switch_case_condition[i][1][0][1] == "Break Keyword":
+                                    break
+                                elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
+                                    # print(f'yooo {switch_case_condition[i][0]}')
+                                    b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
+                                    
+                                    # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
+                                    if b is not None:
+                                        print("line",switch_case_condition[i][0],": ", b)
+                                    # print("hereee", b)
+                                elif switch_case_condition[i][1][0][1] == "Output Keyword":
+                                    # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+
+                                    b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], line_global, self)
+                                    if b is not None:
+                                        print("line",switch_case_condition[i][0],": ", b)
+                                elif switch_case_condition[i][1][0][1] == "Function Call keyword":
+                                    # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+                                    function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i], self)
+
                                 else:
-                                    analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
-                                # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
+                                    
+                                    # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
+                                    # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
+                                    if switch_case_condition[i][1][0][1] == 'Identifier':
+                                        analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+                                    else:
+                                        analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+                                    # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
                 else:
-                    pass           
+                    pass      
             else:
-                pass
+                error_prompt(switch_case_condition[1][0], "Invalid value format for OMG. Value must only be a yarn, troof, numbr, or numbar.", self)
+                # print(f"Error in line {switch_case_condition[1][0]}: Invalid value format for OMG. Value must only be a yarn, troof, numbr, or numbar.")
+                # exit(0)
+        else:
+            pass
 
+    
         
-            
-        default_case_index = None
+    default_case_index = None
 
-        for i in range(len(switch_case_condition)):
-            if switch_case_condition[i][1][0][1] == "Default Case Keyword":
-                default_case_index = i
-                break
+    for i in range(len(switch_case_condition)):
+        if switch_case_condition[i][1][0][1] == "Default Case Keyword":
+            default_case_index = i
+            break
 
-        # print("heyy",default_case_index)
-        # print("do the code block for omgwtf here")
-        for i in range(default_case_index+1, len(switch_case_condition)):
-            
-            # print(switch_case_condition[i][1][0][1])
-            if switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter":
+    # print("heyy",default_case_index)
+    # print("do the code block for omgwtf here")
+    for i in range(default_case_index+1, len(switch_case_condition)):
+        
+        # print(switch_case_condition[i][1][0][1])
+        if switch_case_condition[i][1][0][1] ==  "If-Else or Switch-Case Delimiter":
+            break
+        else:
+            # print(i)
+            if switch_case_condition[i][1][0][1] == "Break Keyword":
                 break
+            elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
+                # print(f'yooo {switch_case_condition[i][0]}')
+                b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
+                
+                # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
+                if b is not None:
+                    print("line",switch_case_condition[i][0],": ", b)
+                # print("hereee", b)
+            elif switch_case_condition[i][1][0][1] == "Output Keyword":
+                # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+
+                b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], line_global, self)
+                if b is not None:
+                    print("line",switch_case_condition[i][0],": ", b)
+            elif switch_case_condition[i][1][0][1] == "Function Call keyword":
+                # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+                function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i], self)
             else:
+
                 # print(i)
-                if switch_case_condition[i][1][0][1] == "Break Keyword":
-                    break
-                elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator" or switch_case_condition[i][1][0][1] == "Infinite Arity Operator":
-                    # print(f'yooo {switch_case_condition[i][0]}')
-                    b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
-                    
-                    # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
-                    if b is not None:
-                        print("line",switch_case_condition[i][0],": ", b)
-                    # print("hereee", b)
-                elif switch_case_condition[i][1][0][1] == "Output Keyword":
-                    # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
 
-                    b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], self)
-                    if b is not None:
-                        print("line",switch_case_condition[i][0],": ", b)
-                elif switch_case_condition[i][1][0][1] == "Function Call keyword":
-                    # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
-                    function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i], self)
-                else:
-                    removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
-                    # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
-                    # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
-                    if switch_case_condition[i][1][0][1] == 'Identifier':
-                        analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+                removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
+                
+                # =============== LOOPS ===============
+                if switch_case_condition[i][1][0][1] == 'Loop Start Delimiter':
+                    is_loop = True
+                    # print("CHECKINGGGGGGGGGGG", switch_case_condition[i][1][0][1])
+                
+                #add the loop code to a list
+                if is_loop == True:   
+                    loop_lines.append(removed_comment)
+                    loop_tokens.append([switch_case_condition_newformat[i][0], switch_case_condition_newformat[i][1:]])
+                
+                #set is_loop to False and call loop analyzer
+                if switch_case_condition[i][1][0][1] == "Loop End Delimiter":
+                    is_loop = False
+                    loop_analyzer(self)
+                                
+                if not is_loop:
+                    if switch_case_condition[i][1][0][1] == "Break Keyword":
+                        break
+                    elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
+                        # print(f'yooo {switch_case_condition[i][0]}')
+                        b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
+                        
+                        # print("check to pls", switch_case_condition[i][1][0:], switch_case_condition[i][0])
+                        if b is not None:
+                            print("line",switch_case_condition[i][0],": ", b)
+                        # print("hereee", b)
+                    elif switch_case_condition[i][1][0][1] == "Output Keyword":
+                        # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+
+                        b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], line_global, self)
+                        if b is not None:
+                            print("line",switch_case_condition[i][0],": ", b)
+                    elif switch_case_condition[i][1][0][1] == "Function Call keyword":
+                        # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
+                        function_analyzer(content[switch_case_condition[i][0]-1], switch_case_condition_newformat[i], self)
                     else:
-                        analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
-                    # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
-        # default_case_index = None
+                        # removed_comment = remove_comments(content[switch_case_condition[i][0]-1], switch_case_condition[i][1:])
+                        # print("d222",removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1:])
+                        # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
+                        if switch_case_condition[i][1][0][1] == 'Identifier':
+                            analyze(removed_comment, switch_case_condition[i][1][1][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+                        else:
+                            analyze(removed_comment, switch_case_condition[i][1][0][1], switch_case_condition[i][0], switch_case_condition[i][1][0:], self)
+                        # print(f'{removed_comment}\n{switch_case_condition[i][1][0][1]}\n{switch_case_condition[i][0]}\n{switch_case_condition[i][1][0:]}')
+            # default_case_index = None
 
 
-    else:
-        # for i in range(len(switch_case_condition)):
-        #     print("*",switch_case_condition[i])
-        print(f"Error in line {switch_case_condition[1][0]}: Invalid value format for OMG. Value must only be a yarn, troof, numbr, or numbar.")
-        exit(0)
+
+    
 
 #TOKENIZE INPUTTED CODE
 def tokenize(self):

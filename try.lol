@@ -1,3 +1,4 @@
+
 HAI
 	WAZZUP
 		I HAS A num1
@@ -18,6 +19,7 @@ HAI
 	IM IN YR desc NERFIN YR num2 TIL BOTH SAEM num2 AN 0
 		VISIBLE num2
 	IM OUTTA YR desc
+
 
 
 KTHXBYE
