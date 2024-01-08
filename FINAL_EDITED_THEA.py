@@ -309,6 +309,7 @@ def arithmetic(line_number, stack, operation, self):
     return stack
 
 def boolean(line_number, stack, operation, self):
+    print(stack)
     operations_dict = {
         "BOTH OF": "and",
         "EITHER OF": "or",
@@ -343,6 +344,7 @@ def boolean(line_number, stack, operation, self):
         elif op1 == 0:
             op1 = False
 
+        print(f"op1 = {op1} : op2 = {op2}")
         try:
             result = eval(f"{op2} {operations_dict[operation]} {op1}")
         except:
@@ -373,8 +375,8 @@ def comparison(line_number, stack, operation, self):
 
 def arithmetic_analyzer(line, line_number, untokenized_line, self):
 
-    print(f"line: {line}")
-    print(f"untokenized_line: {untokenized_line}")
+    #print(f"line: {line}")
+    #print(f"untokenized_line: {untokenized_line}")
     global inside_wazzup_buhbye, wazzup_line, if_keyword, else_keyword, case_keyword, default_case_keyword
 
     
@@ -422,26 +424,31 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
     # Check if infinite arity operator is present
     if line[0][0] == "ALL OF":
         if line[-1][0] == "MKAY":
+            print("============ALL OF")
             isInfiniteAnd = True
         else:
             error_prompt(line_number, "Boolean expression error.", self)
     elif line[0][0] == "ANY OF":
         if line[-1][0] == "MKAY":
+            print("============ANY OF")
             isInfiniteOr = True
         else:   
             error_prompt(line_number, "Boolean expression error.", self)
 
-    revline = line[::-1] 
+    revline = line[::-1]
+
+    if isInfiniteAnd == True or isInfiniteOr == True:
+        revline = revline[1:]
 
     counter = 0
     print(f"REVLINE ====== {revline}")
     for word in revline:
-        print(f"word: {word} - prev: {prev}")
+        print(f"word: {word}")
 
         counter += 1
         # ======================== CHECK SYNTAX
         if counter == 1:
-            if word[1] == "String Literal" or word[1] == "NUMBR Literal" or word[1] == "NUMBAR Literal" or word[1] == "TROOF Literal" or word[1] == "Identifier":
+            if word[1] == "String Literal" or word[1] == "NUMBR Literal" or word[1] == "NUMBAR Literal" or word[1] == "TROOF Literal" or word[1] == "Identifier" or word[1] == "Boolean":
                 prev = "operand"
         else:
             if counter != len(revline) and (isInfiniteAnd == True or isInfiniteOr == True):
@@ -449,7 +456,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
                     error_prompt(line_number, "Expression error.", self)
 
             if prev == "operand":
-                if word[1] == "Arithmetic Operator" or word[1] == "Boolean Operator" or word[1] == "Comparison Operator":
+                if word[1] == "Arithmetic Operator" or word[1] == "Boolean Operator" or word[1] == "Comparison Operator" or word[1] == "Infinite Arity Operator":
                     prev = "operator"
                 elif word[0] == "AN":
                     prev = "AN"
@@ -463,7 +470,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
                 else:
                     error_prompt(line_number, "Arithmetic expression error.", self)
             elif prev == "AN" :
-                if word[0] == "AN" or word[1] == "Arithmetic Operator" or word[1] == "Boolean Operator" or word[1] == "Comparison Operator":
+                if word[0] == "AN" or word[1] == "Arithmetic Operator" or word[1] == "Boolean Operator" or word[1] == "Comparison Operator" or word[1] == "Infinite Arity Operator":
                     error_prompt(line_number, "Expression error.", self)
                 else:
                     prev = "operand"
@@ -473,8 +480,9 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
         # AFTER CHECKING IF THE CURRENT WORD HAS CORRECT TYPE, UPDATE PREV
 
         # IF OPERATION, PERFORM
+        #print(f"{word[0]} : {variables[word[0]]['value']}")
         if word[1] == "Arithmetic Operator":
-            print(stack)
+            #print(stack)
             # print(stack)
             # if current token is an arithmetic operator
             stack = arithmetic(line_number, stack, word[0], self)
@@ -485,8 +493,9 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
             stack = comparison(line_number, stack, word[0], self)
         
         # IF OPERAND, ADD TO STACK
+        
         elif word[0] in variables:
-            print(variables[word[0]]['value'])
+            print(word[0])
             #operand = stack.append(variables[word[0]]['value'])
             if variables[word[0]]['data type'] == 'NUMBR' or variables[word[0]]['data type'] == 'NUMBAR' or variables[word[0]]['data type'] == 'TROOF':
                 if variables[word[0]]['data type'] == 'TROOF':
@@ -502,60 +511,71 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
                     stack.append(int(num))
                 elif is_float(num):
                     stack.append(float(num))
+            
+            #print(stack)
                 #stack.append(variables[word[0]]['value'])
         else:
             #print(f'num: {word[0]}')
             # Check if the element is a string and if it's a float or int
+            if word[1] != "Infinite Arity Operator":
 
             
-            try:
-                # Check if the element is enclosed in quotation marks
-                if word[0].startswith('"') and word[0].endswith('"'):
-                    # Attempt to extract the number inside the quotes
-                    num = word[0][1:-1]
-                    # Check if the num is an integer or float
-                    if is_integer(num):
-                        stack.append(int(num))
-                    elif is_float(num):
-                        stack.append(float(num))
-                else:
-                    # Check if the element is a string and if it's a float or int
-                    # Check if the num is an integer or float
-                    num = word[0]
-                    if is_integer(num):
-                        stack.append(int(num))
-                    elif is_float(num):
-                        stack.append(float(num))
+                try:
+                    # Check if the element is enclosed in quotation marks
+                    if word[0].startswith('"') and word[0].endswith('"'):
+                        # Attempt to extract the number inside the quotes
+                        num = word[0][1:-1]
+                        # Check if the num is an integer or float
+                        if is_integer(num):
+                            stack.append(int(num))
+                        elif is_float(num):
+                            stack.append(float(num))
+                    elif word[0] == "WIN":
+                        stack.append(True)
+                    elif word[0] == "FAIL":
+                        stack.append(False)
+                    else:
+                        # Check if the element is a string and if it's a float or int
+                        # Check if the num is an integer or float
+                        num = word[0]
+                        if is_integer(num):
+                            stack.append(int(num))
+                        elif is_float(num):
+                            stack.append(float(num))
 
-                if word[0] == "WIN":
-                    stack.append(True)
-                elif word[0] == "FAIL":
-                    stack.append(False)
-            except ValueError:
-                error_prompt(line_number, "Arithmetic expression error.", self)
+                except ValueError:
+                    error_prompt(line_number, "EExpression error.", self)
 
         # If last element in revline and len(stack) != 1, print error
-                
-        if counter == len(revline) and len(stack) != 1 and isInfiniteAnd == False and isInfiniteOr == False:
-            error_prompt(line_number, "Arithmetic expression error.", self)
-            #print(f"Error in line {line_number}: Arithmetic expression error.")
-            return
-        elif isInfiniteAnd == True:
-            try:
-                result = all(stack)
-            except:
-                error_prompt(line_number, "Boolean expression error.", self)
-            return result
-        elif isInfiniteOr == True:
-            try:
-                result = any(stack)
-            except:
-                error_prompt(line_number, "Boolean expression error.", self)
-            return result
+        #print(f"{counter} = {revline} : AND = {isInfiniteAnd} : OR = {isInfiniteOr}")
+    if counter == len(revline) and len(stack) != 1 and isInfiniteAnd == False and isInfiniteOr == False:
+        error_prompt(line_number, "Expressionn error.", self)
+        #print(f"Error in line {line_number}: Arithmetic expression error.")
+        return
+    if isInfiniteAnd == True:
+        print(stack)
+        try:
+            result = all(stack)
+        except:
+            error_prompt(line_number, "Boolean expression error.", self)
+        if result is True:
+            return "WIN"
+        elif result is False:
+            return "FAIL"
+    elif isInfiniteOr == True:
+        print(stack)
+        try:
+            result = any(stack)
+        except:
+            error_prompt(line_number, "Boolean expression error.", self)
+        if result is True:
+            return "WIN"
+        elif result is False:
+            return "FAIL"
     
-    print(stack)
+   #print(stack)
     if len(stack) != 1:
-        error_prompt(line_number, "Expression error.", self)
+        error_prompt(line_number, "Expressionn error.", self)
 
     global is_var_assignment
 
@@ -582,7 +602,7 @@ def arithmetic_analyzer(line, line_number, untokenized_line, self):
 def print_analyzer(line, line_number, untokenized, self):
         
 
-    global is_var_assignment
+    global is_var_assignment, is_error
     isStart = True
     hasOperand = True
     global inside_wazzup_buhbye, wazzup_line
@@ -619,7 +639,7 @@ def print_analyzer(line, line_number, untokenized, self):
     operand = []
     #print(line)
     counter = 0
-    
+    #print(f"line: {line}")
     for word in line:
 
         counter += 1
@@ -639,9 +659,10 @@ def print_analyzer(line, line_number, untokenized, self):
     print(operands)
     for op in operands:
         if len(op) == 1:
+            #print("INSIDE")
             if op[0][1] == "String Literal":
                 toprint += op[0][0][1:-1]
-            elif op[0][1] == "NUMBR Literal" or op[0][1] == "NUMBAR Literal" or op[0][1] == "TROOF Literal":
+            elif op[0][1] == "NUMBR Literal" or op[0][1] == "NUMBAR Literal" or op[0][1] == "TROOF Literal" or op[0][1] == "YARN Literal" or op[0][1] == "Boolean":
                 toprint += op[0][0]
             elif op[0][1] == "Identifier":
                 try:
@@ -651,14 +672,16 @@ def print_analyzer(line, line_number, untokenized, self):
             else:
                 error_prompt(line_number, "Print expression error.", self)
         else:
-            if op[0][1] == "YARN Literal" or op[0][1] == "NUMBR Literal" or op[0][1] == "NUMBAR Literal" or op[0][1] == "TROOF Literal" or op[0][1] == "YARN Literal":
+            print(op[0][1])
+            if op[0][1] != "Arithmetic Operator" and op[0][1] != "Boolean Operator" and op[0][1] != "Comparison Operator" and op[0][1] != "Concatenation Operator" and op[0][1] != "Infinite Arity Operator":
                 error_prompt(line_number, "Missing printing delimeter between operands.", self)
+            
             expression = ""
             for word in op:
                 expression += word[0]
                 expression += " "
             
-            if op[0][1] == "Arithmetic Operator" or op[0][1] == "Boolean Operator" or op[0][1] == "Comparison Operator":
+            if op[0][1] == "Arithmetic Operator" or op[0][1] == "Boolean Operator" or op[0][1] == "Comparison Operator" or op[0][1] == "Infinite Arity Operator":
                 #print(f"expression: {expression[:-1]}")
                 new_value = arithmetic_analyzer(op, line_number, expression[:-1], self)
                 #def analyze(line, classification, line_number, all_tokens, self):
@@ -671,7 +694,8 @@ def print_analyzer(line, line_number, untokenized, self):
                 except:
                     error_prompt(line_number, "Print expression error.", self)
 
-    console_dislay(toprint, self)
+    if is_error == False:
+        console_dislay(toprint, self)
     return toprint
 
 def input_analyzer(line, line_number, untokenized_line, self):
@@ -877,6 +901,7 @@ def analyze(line, classification, line_number, all_tokens, self):
                                 global is_var_assignment
                                 is_var_assignment = True
                                 filtered_tokens = [(value, category) for value, category in all_tokens if category not in expression]
+                                print(filtered_tokens)
                                 new_value = arithmetic_analyzer(filtered_tokens, line_number, line, self)
                                 # print("new value", new_value)
                                 if re.match(integer_pattern, str(new_value)):
@@ -1268,7 +1293,7 @@ def loop_analyzer(self):
                                     # print(loop_code_line[1:])
                                     #console_dislay(b, self)
                                     print("THISSSSS",loop_code_line[0],": ", b)
-                            if classification == "Arithmetic Operator" or classification == "Boolean Operator" or classification == "Comparison Operator":
+                            if classification == "Arithmetic Operator" or classification == "Boolean Operator" or classification == "Comparison Operator" or classification == "Infinite Arity Operator":
                                 b = arithmetic_analyzer(loop_code_line[1:][0], loop_code_line[0], loop_block[loop_block_counter], self)
                                 if b is not None:
                                     print("line", loop_code_line[0],": ", b)
@@ -1503,7 +1528,7 @@ def function_analyzer(line, tokens, self):
                             new_classification = expression_tokens_final[0][1]
                             
                             #evaluate the expression
-                            if new_classification == "Arithmetic Operator" or new_classification == "Boolean Operator" or new_classification == "Comparison Operator":
+                            if new_classification == "Arithmetic Operator" or new_classification == "Boolean Operator" or new_classification == "Comparison Operator" or new_classification == "Infinite Arity Operator":
                                 new_value = arithmetic_analyzer(expression_tokens_final, tokens[0], expression, self)
                                 new_value = str(new_value)
                             else:
@@ -1649,7 +1674,7 @@ def function_analyzer(line, tokens, self):
                                     print("THISSSSS", code_line_number,": ", to_print)
                                     
                             # =============== ARITHMETIC OPERATIONS ===============
-                            elif keyword == "Arithmetic Operator" or keyword == "Boolean Operator" or keyword == "Comparison Operator":
+                            elif keyword == "Arithmetic Operator" or keyword == "Boolean Operator" or keyword == "Comparison Operator" or keyword == "Infinite Arity Operator":
                                 return_value = arithmetic_analyzer(code_tuples, code_line_number, code_line, self)
                                 return_value = str(return_value)
 
@@ -1729,7 +1754,7 @@ def function_analyzer(line, tokens, self):
     
     #reset the variables back
     #function_var.update(function_parameters)
-    print(f"temp_variables: {function_parameters}")
+    #print(f"temp_variables: {function_parameters}")
     variables = temp_variables
     
     
@@ -1808,7 +1833,7 @@ def switch_case_analyzer(content, lines, self):
                             # print(i)
                             if switch_case_condition[i][1][0][1] == "Break Keyword":
                                 break
-                            elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
+                            elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator" or switch_case_condition[i][1][0][1] == "Infinite Arity Operator":
                                 # print(f'yooo {switch_case_condition[i][0]}')
                                 b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
                                 
@@ -1819,7 +1844,7 @@ def switch_case_analyzer(content, lines, self):
                             elif switch_case_condition[i][1][0][1] == "Output Keyword":
                                 # print(f'{content[switch_case_condition[i][0]-1]}\n{switch_case_condition_newformat[i]}')
 
-                                b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], self)
+                                b = print_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
                                 if b is not None:
                                     print("line",switch_case_condition[i][0],": ", b)
                             elif switch_case_condition[i][1][0][1] == "Function Call keyword":
@@ -1859,7 +1884,7 @@ def switch_case_analyzer(content, lines, self):
                 # print(i)
                 if switch_case_condition[i][1][0][1] == "Break Keyword":
                     break
-                elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator":
+                elif switch_case_condition[i][1][0][1] == "Arithmetic Operator" or switch_case_condition[i][1][0][1] == "Boolean Operator" or switch_case_condition[i][1][0][1] == "Comparison Operator" or switch_case_condition[i][1][0][1] == "Infinite Arity Operator":
                     # print(f'yooo {switch_case_condition[i][0]}')
                     b = arithmetic_analyzer(switch_case_condition[i][1][0:], switch_case_condition[i][0], lines, self)
                     
@@ -2218,7 +2243,7 @@ def tokenize(self):
                         continue
                     
                     #=======================ARITHMETIC OPERATIONS=======================    
-                    if tokens[1][1] == "Arithmetic Operator" or tokens[1][1] == "Boolean Operator" or tokens[1][1] == "Comparison Operator":
+                    if tokens[1][1] == "Arithmetic Operator" or tokens[1][1] == "Boolean Operator" or tokens[1][1] == "Comparison Operator" or tokens[1][1] == "Infinite Arity Operator":
 
                         # this is to ensure that the wazzup and buhbye block only contains variable declaration 
                         # also, this checks whether the wazzup has corresponding buhbye, and vice versa
@@ -2457,7 +2482,7 @@ class SymbolTable(tk.Frame):
         #self.treeview.insert("", 'end', values=("LOL", "value"))
 
     def add_function_variables(self, symbol_dict):
-        print(symbol_dict)
+        #print(symbol_dict)
         for idx, (identifier, info_dict) in enumerate(symbol_dict.items(), start=1):
             value = info_dict.get('value', '')
             self.treeview.insert("", 'end', values=(identifier, value))
