@@ -21,21 +21,7 @@ pip install tk
 
 ## Running the Interpreter
 
-To execute the LOL Code Interpreter, follow these steps:
-
-1. **Clone the Repository:**
-
-    ```bash
-    git clone https://github.com/yourusername/lol-code-interpreter.git
-    ```
-
-2. **Navigate to the Project Directory:**
-
-    ```bash
-    cd lol-code-interpreter
-    ```
-
-3. **Run the Interpreter:**
+To execute the LOL Code Interpreter you can run the following: 
 
     ```bash
     python lol_code_interpreter.py
