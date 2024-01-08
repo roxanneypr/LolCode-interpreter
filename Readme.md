@@ -17,6 +17,7 @@ If you don't have Tkinter installed, you can install it using the following comm
 
 ```bash
 pip install tk
+```
 
 ## Running the Interpreter
 
